@@ -777,7 +777,7 @@ def remove_reply_keyboard(chat_id, text="⬇️ Клавиатура обнов�
 
 def main_keyboard(chat_id=None):
     keyboard = [
-        [{"text": "🎯 ГОТОВЫЕ АНОНИМНЫЕ АККАУНТЫ Telegram 🌍", "callback_data": "sub:accounts:by_country"}],
+        [{"text": "🎯 АККАУНТЫ TELEGRAM 🌍", "callback_data": "sub:accounts:by_country"}],
         [{"text": "⭐ Звёзды Telegram", "callback_data": "cat:stars"}],
         [{"text": "💬 Администрация", "url": ADMIN_LINK}]
     ]
@@ -932,13 +932,13 @@ def accounts_by_country_text():
     total = sum(ACCOUNTS_STOCK.get(k, 0) for k in ACCOUNTS_CATALOG)
     return (
         "╔══════════════════════════╗\n"
-        "║  🌍 <b>ГОТОВЫЕ АНОНИМНЫЕ АККАУНТЫ Telegram</b>  ║\n"
+        "║  🌍 <b>АККАУНТЫ TELEGRAM</b>  ║\n"
         "╚══════════════════════════╝\n\n"
         f"📦 В наличии: {total} шт\n"
         f"🌏 Стран: {len(ACCOUNTS_CATALOG)}\n\n"
         "━━━━━━━━━━━━━━━━━━━━━━\n"
-        "🕶️ Анонимность превыше всего.\n"
-        "✅ Никаких следов. Никаких имён.\n"
+        "🕶️ Качество проверено.\n"
+        "✅ Без следов. Без имён.\n"
         "🔥 Зашёл, взял, вышел — и ты чистый.\n"
         "━━━━━━━━━━━━━━━━━━━━━━\n\n"
         "👇 Выбери страну:"
