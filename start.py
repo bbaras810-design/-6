@@ -805,13 +805,12 @@ def accounts_by_country_keyboard():
         qty = ACCOUNTS_STOCK.get(acc_id, 0)
         stars = item.get("stars", "?")
         price = item.get("price", "?")
-        old_price = item.get("old_price")
         discount = item.get("discount")
 
-        if old_price and discount:
-            price_part = f"{old_price}→{price}₽ -{discount}% ⚡"
+        if discount:
+            price_part = f"{price}₽ 🎁-{discount}% | {stars}⭐"
         else:
-            price_part = f"{price}₽ / {stars}⭐"
+            price_part = f"{price}₽ | {stars}⭐"
 
         keyboard.append([{
             "text": f"{item['name']} {price_part} ({qty}шт)",
@@ -1251,21 +1250,23 @@ def handle_update(update):
             "price": item["price"], "stars": item.get("stars", "?"), "status": "waiting_payment"
         }
 
-        if item.get("old_price"):
+        if item.get("discount"):
             price_line = (
-                f"💰 Цена: было {item['old_price']} ₽ → стало <b>{item['price']} ₽</b>  "
-                f"🎁 -{item.get('discount', 15)}%\n"
-                f"⚡ <b>Успей купить!</b>\n"
+                f"💰 Цена: <b>{item['price']} ₽</b>  🎁 -{item['discount']}%  "
+                f"<s>{item.get('old_price', '')} ₽</s>\n"
+                f"⭐ Звёзды: <b>{item.get('stars', '?')}⭐</b> (без скидки)\n\n"
             )
         else:
-            price_line = f"💰 Цена: <b>{item['price']} ₽</b>\n"
+            price_line = (
+                f"💰 Цена: <b>{item['price']} ₽</b>\n"
+                f"⭐ Звёзды: <b>{item.get('stars', '?')}⭐</b>\n\n"
+            )
 
         edit_message(
             chat_id, message_id,
             f"💳 <b>ВЫБЕРИТЕ СПОСОБ ОПЛАТЫ</b>\n\n"
             f"📦 Товар: <b>{item['name']}</b>\n"
             f"{price_line}"
-            f"⭐ Звёзды: <b>{item.get('stars', '?')}⭐</b>\n\n"
             f"👇 Как хотите оплатить?",
             payment_method_keyboard(order_counter, item["name"], item["price"], item.get("stars", "?"))
         )
