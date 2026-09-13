@@ -72,8 +72,7 @@ def kill_old_bots():
 
 
 def remove_lock_files():
-    lock_files = ["bot_numbers.lock", "bot.lock"]
-    for lock_file in lock_files:
+    for lock_file in ["bot_numbers.lock", "bot.lock"]:
         try:
             if os.path.exists(lock_file):
                 os.remove(lock_file)
@@ -108,6 +107,8 @@ REQUEST_TIMEOUT = 15
 RECONNECT_DELAY = 1
 MAX_RETRIES = 2
 
+STAR_RATE = 1.69
+
 # ==================================================
 # ПАПКА ДАННЫХ
 # ==================================================
@@ -121,7 +122,6 @@ if not SCRIPT_DIR:
     SCRIPT_DIR = os.getcwd()
 
 DATA_DIR = os.path.join(SCRIPT_DIR, "data")
-
 try:
     os.makedirs(DATA_DIR, exist_ok=True)
     print(f"📁 Папка данных: {DATA_DIR}")
@@ -167,7 +167,6 @@ orders = {}
 pending_orders = {}
 temp_data = {}
 order_counter = 0
-
 chat_mode = {}
 
 SPAM_WINDOW = 10
@@ -218,81 +217,86 @@ BAD_WORDS = [
 ]
 
 # ==================================================
-# АККАУНТЫ — ЦЕНЫ В ₽ И ⭐ (округление до 50)
+# АККАУНТЫ
 # ==================================================
 
 ACCOUNTS_BASE_STOCK = {
-    "acc_mm": 231, "acc_co": 184, "acc_bd": 171, "acc_in": 166,
-    "acc_us": 121, "acc_uz": 108, "acc_cl": 100, "acc_br": 91,
-    "acc_pk": 80,  "acc_eg": 72,  "acc_ca": 71,  "acc_ir": 63,
-    "acc_ng": 58,  "acc_vn": 58,  "acc_lk": 50,  "acc_mx": 50,
-    "acc_mg": 47,  "acc_th": 47,  "acc_ar": 45,  "acc_it": 43,
-    "acc_af": 40,  "acc_pe": 39,  "acc_pt": 39,  "acc_np": 39,
-    "acc_ph": 34,  "acc_id": 34,  "acc_hk": 34,  "acc_tr": 29,
-    "acc_at": 28,  "acc_kw": 27,  "acc_cu": 26,  "acc_am": 25,
-    "acc_fj": 24,  "acc_pl": 22,  "acc_jp": 22,  "acc_mr": 22,
-    "acc_jm": 22,  "acc_sa": 21,  "acc_my": 20,  "acc_ye": 20,
-    "acc_gb": 18,  "acc_ie": 18,  "acc_ee": 14,  "acc_sg": 10,
+    "acc_bd": 130, "acc_us": 375, "acc_mr": 24,
+    "acc_mm": 231, "acc_co": 184, "acc_in": 223,
+    "acc_ph": 91,  "acc_ng": 11,  "acc_id": 79,
+    "acc_pk": 10,  "acc_cl": 114, "acc_ca": 59,
+    "acc_ir": 62,  "acc_eg": 70,  "acc_mg": 47,
+    "acc_np": 39,  "acc_pe": 39,  "acc_br": 91,
+    "acc_vn": 58,  "acc_af": 40,  "acc_mx": 50,
+    "acc_th": 47,  "acc_uz": 108, "acc_gb": 18,
+    "acc_cu": 26,  "acc_ye": 20,  "acc_jm": 22,
+    "acc_lk": 50,  "acc_my": 20,  "acc_ar": 45,
+    "acc_ie": 18,  "acc_tr": 29,  "acc_it": 43,
+    "acc_pl": 22,  "acc_sa": 21,  "acc_fj": 24,
+    "acc_hk": 34,  "acc_jp": 22,  "acc_at": 28,
+    "acc_pt": 39,  "acc_kw": 27,  "acc_am": 25,
+    "acc_ee": 14,  "acc_sg": 10,
 }
 
 ACCOUNTS_CATALOG = {
+    # 🔥 ПОПУЛЯРНЫЕ
+    "acc_bd": {"name": "🔥🇧🇩 Бангладеш (+880)", "price": "123.38", "old_price": "154.23", "stars": "200", "discount": 20},
+    "acc_us": {"name": "🔥🇺🇸 США (+1)",         "price": "123.38", "old_price": "154.23", "stars": "200", "discount": 20},
+    "acc_mr": {"name": "🔥🇲🇷 Мавритания (+222)","price": "319.50", "old_price": "375.75", "stars": "650", "discount": 15},
+
     "acc_mm": {"name": "🇲🇲 Мьянма (+95)",             "price": "110.25", "stars": "200"},
     "acc_co": {"name": "🇨🇴 Колумбия (+57)",           "price": "117.00", "stars": "200"},
-    "acc_bd": {"name": "🇧🇩 Бангладеш (+880)",         "price": "119.25", "stars": "200"},
     "acc_in": {"name": "🇮🇳 Индия (+91)",              "price": "119.25", "stars": "200"},
-    "acc_us": {"name": "🇺🇸 США (+1)",                 "price": "119.25", "stars": "200"},
-    "acc_ph": {"name": "🇵🇭 Филиппины (+63)",          "price": "128.25", "stars": "250"},
-    "acc_ng": {"name": "🇳🇬 Нигерия (+234)",           "price": "130.50", "stars": "250"},
+    "acc_ph": {"name": "🇵🇭 Филиппины (+63)",          "price": "128.25", "stars": "200"},
+    "acc_ng": {"name": "🇳🇬 Нигерия (+234)",           "price": "130.50", "stars": "200"},
     "acc_id": {"name": "🇮🇩 Индонезия (+62)",          "price": "141.75", "stars": "250"},
     "acc_pk": {"name": "🇵🇰 Пакистан (+92)",           "price": "144.00", "stars": "250"},
     "acc_cl": {"name": "🇨🇱 Чили (+56)",               "price": "177.75", "stars": "300"},
-    "acc_ca": {"name": "🇨🇦 Канада (+1)",              "price": "193.50", "stars": "350"},
-    "acc_ir": {"name": "🇮🇷 Иран (+98)",               "price": "218.25", "stars": "400"},
-    "acc_eg": {"name": "🇪🇬 Египет (+20)",             "price": "222.75", "stars": "400"},
-    "acc_mg": {"name": "🇲🇬 Мадагаскар (+261)",        "price": "245.25", "stars": "450"},
-    "acc_np": {"name": "🇳🇵 Непал (+977)",             "price": "249.75", "stars": "450"},
+    "acc_ca": {"name": "🇨🇦 Канада (+1)",              "price": "193.50", "stars": "300"},
+    "acc_ir": {"name": "🇮🇷 Иран (+98)",               "price": "218.25", "stars": "350"},
+    "acc_eg": {"name": "🇪🇬 Египет (+20)",             "price": "222.75", "stars": "350"},
+    "acc_mg": {"name": "🇲🇬 Мадагаскар (+261)",        "price": "245.25", "stars": "400"},
+    "acc_np": {"name": "🇳🇵 Непал (+977)",             "price": "249.75", "stars": "400"},
     "acc_pe": {"name": "🇵🇪 Перу (+51)",               "price": "258.75", "stars": "450"},
     "acc_br": {"name": "🇧🇷 Бразилия (+55)",           "price": "261.00", "stars": "450"},
-    "acc_vn": {"name": "🇻🇳 Вьетнам (+84)",            "price": "270.00", "stars": "500"},
-    "acc_af": {"name": "🇦🇫 Афганистан (+93)",         "price": "279.00", "stars": "500"},
+    "acc_vn": {"name": "🇻🇳 Вьетнам (+84)",            "price": "270.00", "stars": "450"},
+    "acc_af": {"name": "🇦🇫 Афганистан (+93)",         "price": "279.00", "stars": "450"},
     "acc_mx": {"name": "🇲🇽 Мексика (+52)",            "price": "285.75", "stars": "500"},
     "acc_th": {"name": "🇹🇭 Таиланд (+66)",            "price": "297.00", "stars": "500"},
-    "acc_uz": {"name": "🇺🇿 Узбекистан (+998)",        "price": "301.50", "stars": "550"},
-    "acc_gb": {"name": "🇬🇧 Великобритания (+44)",     "price": "312.75", "stars": "550"},
+    "acc_uz": {"name": "🇺🇿 Узбекистан (+998)",        "price": "301.50", "stars": "500"},
+    "acc_gb": {"name": "🇬🇧 Великобритания (+44)",     "price": "312.75", "stars": "500"},
     "acc_cu": {"name": "🇨🇺 Куба (+53)",               "price": "321.75", "stars": "550"},
     "acc_ye": {"name": "🇾🇪 Йемен (+967)",             "price": "324.00", "stars": "550"},
-    "acc_jm": {"name": "🇯🇲 Ямайка (+1)",              "price": "330.75", "stars": "600"},
-    "acc_lk": {"name": "🇱🇰 Шри-Ланка (+94)",          "price": "335.25", "stars": "600"},
+    "acc_jm": {"name": "🇯🇲 Ямайка (+1)",              "price": "330.75", "stars": "550"},
+    "acc_lk": {"name": "🇱🇰 Шри-Ланка (+94)",          "price": "335.25", "stars": "550"},
     "acc_my": {"name": "🇲🇾 Малайзия (+60)",           "price": "348.75", "stars": "600"},
     "acc_ar": {"name": "🇦🇷 Аргентина (+54)",          "price": "357.75", "stars": "600"},
-    "acc_mr": {"name": "🇲🇷 Мавритания (+222)",        "price": "375.75", "stars": "650"},
     "acc_ie": {"name": "🇮🇪 Ирландия (+353)",          "price": "384.75", "stars": "650"},
-    "acc_tr": {"name": "🇹🇷 Турция (+90)",             "price": "420.75", "stars": "750"},
+    "acc_tr": {"name": "🇹🇷 Турция (+90)",             "price": "420.75", "stars": "700"},
     "acc_it": {"name": "🇮🇹 Италия (+39)",             "price": "438.75", "stars": "750"},
     "acc_pl": {"name": "🇵🇱 Польша (+48)",             "price": "445.50", "stars": "750"},
     "acc_sa": {"name": "🇸🇦 Саудовская Аравия (+966)", "price": "445.50", "stars": "750"},
     "acc_fj": {"name": "🇫🇯 Фиджи (+679)",             "price": "447.75", "stars": "750"},
     "acc_hk": {"name": "🇭🇰 Гонконг (+852)",           "price": "477.00", "stars": "800"},
-    "acc_jp": {"name": "🇯🇵 Япония (+81)",             "price": "479.25", "stars": "850"},
-    "acc_at": {"name": "🇦🇹 Австрия (+43)",            "price": "488.25", "stars": "850"},
-    "acc_pt": {"name": "🇵🇹 Португалия (+351)",        "price": "488.25", "stars": "850"},
+    "acc_jp": {"name": "🇯🇵 Япония (+81)",             "price": "479.25", "stars": "800"},
+    "acc_at": {"name": "🇦🇹 Австрия (+43)",            "price": "488.25", "stars": "800"},
+    "acc_pt": {"name": "🇵🇹 Португалия (+351)",        "price": "488.25", "stars": "800"},
     "acc_kw": {"name": "🇰🇼 Кувейт (+965)",            "price": "497.25", "stars": "850"},
-    "acc_am": {"name": "🇦🇲 Армения (+374)",           "price": "542.25", "stars": "950"},
-    "acc_ee": {"name": "🇪🇪 Эстония (+372)",           "price": "549.00", "stars": "950"},
+    "acc_am": {"name": "🇦🇲 Армения (+374)",           "price": "542.25", "stars": "900"},
+    "acc_ee": {"name": "🇪🇪 Эстония (+372)",           "price": "549.00", "stars": "900"},
     "acc_sg": {"name": "🇸🇬 Сингапур (+65)",           "price": "1930.50", "stars": "3250"},
 }
 
-ACCOUNTS_STOCK = {}
+ACCOUNTS_STOCK = dict(ACCOUNTS_BASE_STOCK)
 
 STARS_PACKAGES = {
-    "stars_50":    {"name": "🌟 50 Stars",    "price": "82.50"},
-    "stars_100":   {"name": "🌟 100 Stars",   "price": "165"},
-    "stars_250":   {"name": "🌟 250 Stars",   "price": "412.50"},
-    "stars_500":   {"name": "🌟 500 Stars",   "price": "825"},
-    "stars_1000":  {"name": "🌟 1000 Stars",  "price": "1650"},
-    "stars_2500":  {"name": "🌟 2500 Stars",  "price": "4125"},
-    "stars_5000":  {"name": "🌟 5000 Stars",  "price": "8250"},
-    "stars_10000": {"name": "🌟 10000 Stars", "price": "16500"}
+    "stars_100":   {"name": "🌟 100 Stars",   "price": f"{100 * STAR_RATE:.2f}"},
+    "stars_250":   {"name": "🌟 250 Stars",   "price": f"{250 * STAR_RATE:.2f}"},
+    "stars_500":   {"name": "🌟 500 Stars",   "price": f"{500 * STAR_RATE:.2f}"},
+    "stars_1000":  {"name": "🌟 1000 Stars",  "price": f"{1000 * STAR_RATE:.2f}"},
+    "stars_2500":  {"name": "🌟 2500 Stars",  "price": f"{2500 * STAR_RATE:.2f}"},
+    "stars_5000":  {"name": "🌟 5000 Stars",  "price": f"{5000 * STAR_RATE:.2f}"},
+    "stars_10000": {"name": "🌟 10000 Stars", "price": f"{10000 * STAR_RATE:.2f}"},
 }
 
 # ==================================================
@@ -303,10 +307,7 @@ def is_bad_message(text):
     if not text:
         return False
     lower = text.lower()
-    for w in BAD_WORDS:
-        if w in lower:
-            return True
-    return False
+    return any(w in lower for w in BAD_WORDS)
 
 
 def is_spam(chat_id):
@@ -330,9 +331,7 @@ def is_flood(chat_id, text):
         return False
     last = user_last_msg.get(chat_id)
     user_last_msg[chat_id] = text
-    if last and last.strip().lower() == text.strip().lower():
-        return True
-    return False
+    return bool(last and last.strip().lower() == text.strip().lower())
 
 
 def notify_admin_violation(user_chat_id, reason, extra_text, order_id=None):
@@ -348,11 +347,9 @@ def notify_admin_violation(user_chat_id, reason, extra_text, order_id=None):
     if order_id:
         text += f"📦 Заказ #{order_id}\n"
     text += f"\n⚠️ Причина: <b>{reason}</b>\n\n"
-
     if extra_text:
         short = extra_text[:300] + ("…" if len(extra_text) > 300 else "")
         text += f"📝 Текст:\n<code>{short}</code>\n\n"
-
     text += "👇 Решение за вами:"
 
     keyboard = {
@@ -456,8 +453,7 @@ def load_verified_users():
                 if len(parts) >= 2:
                     try:
                         uid = int(parts[0])
-                        phone = parts[1]
-                        user_phones[uid] = phone
+                        user_phones[uid] = parts[1]
                         user_verified[uid] = True
                         if len(parts) >= 3:
                             user_usernames[uid] = parts[2] if parts[2] != "-" else ""
@@ -521,26 +517,26 @@ def load_stock():
     ACCOUNTS_STOCK = dict(ACCOUNTS_BASE_STOCK)
     if not os.path.exists(STOCK_FILE):
         save_stock()
-        return
-    try:
-        loaded = {}
-        with open(STOCK_FILE, "r", encoding="utf-8") as f:
-            for line in f:
-                line = line.strip()
-                if not line or line.startswith("#"):
-                    continue
-                parts = line.split("|")
-                if len(parts) == 2:
-                    try:
-                        loaded[parts[0]] = int(parts[1])
-                    except ValueError:
+    else:
+        try:
+            loaded = {}
+            with open(STOCK_FILE, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line or line.startswith("#"):
                         continue
-        for key in ACCOUNTS_CATALOG.keys():
-            if key in loaded:
-                ACCOUNTS_STOCK[key] = loaded[key]
-        print(f"✅ Загружены остатки для {len(ACCOUNTS_STOCK)} аккаунтов")
-    except Exception as e:
-        print(f"⚠️ Ошибка: {e}")
+                    parts = line.split("|")
+                    if len(parts) == 2:
+                        try:
+                            loaded[parts[0]] = int(parts[1])
+                        except ValueError:
+                            continue
+            for key in ACCOUNTS_CATALOG.keys():
+                if key in loaded:
+                    ACCOUNTS_STOCK[key] = loaded[key]
+            print(f"✅ Загружены остатки для {len(ACCOUNTS_STOCK)} аккаунтов")
+        except Exception as e:
+            print(f"⚠️ Ошибка: {e}")
 
 
 def save_stock():
@@ -587,27 +583,15 @@ def load_all_sales():
                 if len(parts) >= 8:
                     if len(parts) >= 9:
                         sales.append({
-                            "chat_id": parts[0],
-                            "code": parts[1],
-                            "item": parts[2],
-                            "price": parts[3],
-                            "payment": parts[4],
-                            "username": parts[5],
-                            "phone": parts[6],
-                            "name": parts[7],
-                            "date": parts[8],
+                            "chat_id": parts[0], "code": parts[1], "item": parts[2],
+                            "price": parts[3], "payment": parts[4], "username": parts[5],
+                            "phone": parts[6], "name": parts[7], "date": parts[8],
                         })
                     else:
                         sales.append({
-                            "chat_id": parts[0],
-                            "code": parts[1],
-                            "item": parts[2],
-                            "price": parts[3],
-                            "payment": "RUB",
-                            "username": parts[4],
-                            "phone": parts[5],
-                            "name": parts[6],
-                            "date": parts[7],
+                            "chat_id": parts[0], "code": parts[1], "item": parts[2],
+                            "price": parts[3], "payment": "RUB", "username": parts[4],
+                            "phone": parts[5], "name": parts[6], "date": parts[7],
                         })
     except Exception as e:
         print(f"⚠️ Ошибка: {e}")
@@ -617,8 +601,7 @@ def load_all_sales():
 def get_user_purchase_counters(chat_id):
     nb_count = 0
     st_count = 0
-    sales = load_all_sales()
-    for s in sales:
+    for s in load_all_sales():
         if str(s["chat_id"]) == str(chat_id):
             code = s["code"]
             if code.startswith("nb"):
@@ -643,8 +626,7 @@ def extract_phone_index(item_name):
 
 def extract_stars_count(item_name):
     try:
-        parts = item_name.split()
-        for p in parts:
+        for p in item_name.split():
             if p.isdigit():
                 return p
         return ""
@@ -655,13 +637,8 @@ def extract_stars_count(item_name):
 def make_purchase_code(chat_id, is_stars, item_name):
     nb_count, st_count = get_user_purchase_counters(chat_id)
     if is_stars:
-        next_num = st_count + 1
-        stars_count = extract_stars_count(item_name) or "?"
-        return f"st{next_num}+{stars_count}"
-    else:
-        next_num = nb_count + 1
-        index = extract_phone_index(item_name) or ""
-        return f"nb{next_num}{index}"
+        return f"st{st_count + 1}+{extract_stars_count(item_name) or '?'}"
+    return f"nb{nb_count + 1}{extract_phone_index(item_name) or ''}"
 
 
 def save_sold_log(category, item, price, username, phone, chat_id, name, is_stars=False, payment_method="rub", stars="?"):
@@ -669,7 +646,6 @@ def save_sold_log(category, item, price, username, phone, chat_id, name, is_star
         now = time.localtime()
         time_str = time.strftime("%H:%M", now)
         date_str = time.strftime("%d.%m", now)
-
         code = make_purchase_code(chat_id, is_stars, item)
 
         item_clean = (str(item) or "-").replace("|", "_").strip()
@@ -699,14 +675,10 @@ def save_sold_log(category, item, price, username, phone, chat_id, name, is_star
 
 
 def get_user_purchases_display(chat_id):
-    sales = load_all_sales()
-    user_sales = [s for s in sales if str(s["chat_id"]) == str(chat_id)]
+    user_sales = [s for s in load_all_sales() if str(s["chat_id"]) == str(chat_id)]
     if not user_sales:
         return ""
-    lines = []
-    for s in user_sales:
-        lines.append(f"  <code>{s['code']}</code> {s['date']} — {s['item']} — {s['price']}")
-    return "\n".join(lines)
+    return "\n".join(f"  <code>{s['code']}</code> {s['date']} — {s['item']} — {s['price']}" for s in user_sales)
 
 # ==================================================
 # API
@@ -762,12 +734,7 @@ def send_message(chat_id, text, keyboard=None, disable_notification=False):
 
 
 def edit_message(chat_id, message_id, text, keyboard=None):
-    data = {
-        "chat_id": chat_id,
-        "message_id": message_id,
-        "text": text,
-        "parse_mode": "HTML"
-    }
+    data = {"chat_id": chat_id, "message_id": message_id, "text": text, "parse_mode": "HTML"}
     if keyboard:
         data["reply_markup"] = json.dumps(keyboard, ensure_ascii=False)
     return api("editMessageText", data)
@@ -779,17 +746,13 @@ def answer_callback(callback_id):
 
 def answer_callback_text(callback_id, text, show_alert=False):
     return api("answerCallbackQuery", {
-        "callback_query_id": callback_id,
-        "text": text,
-        "show_alert": show_alert
+        "callback_query_id": callback_id, "text": text, "show_alert": show_alert
     })
 
 
 def send_contact_request(chat_id):
     keyboard = {
-        "keyboard": [
-            [{"text": "📱 Поделиться номером", "request_contact": True}]
-        ],
+        "keyboard": [[{"text": "📱 Поделиться номером", "request_contact": True}]],
         "resize_keyboard": True,
         "one_time_keyboard": True
     }
@@ -814,9 +777,9 @@ def remove_reply_keyboard(chat_id, text="⬇️ Клавиатура обнов�
 
 def main_keyboard(chat_id=None):
     keyboard = [
-        [{"text": "🎯🔥 АККАУНТЫ 🔥🎯", "callback_data": "sub:accounts:by_country"}],
+        [{"text": "🎯 ГОТОВЫЕ АНОНИМНЫЕ АККАУНТЫ Telegram 🌍", "callback_data": "sub:accounts:by_country"}],
         [{"text": "⭐ Звёзды Telegram", "callback_data": "cat:stars"}],
-        [{"text": "👤 Администрация", "url": ADMIN_LINK}]
+        [{"text": "💬 Администрация", "url": ADMIN_LINK}]
     ]
     if chat_id and is_admin(chat_id):
         keyboard.append([{"text": "👥 Все пользователи", "callback_data": "admin:users"}])
@@ -831,7 +794,7 @@ def stars_keyboard():
         keyboard.append([
             {"text": f"⭐ {count} Stars — {stars['price']} ₽", "callback_data": f"buy_stars:{stars_id}"}
         ])
-    keyboard.append([{"text": "👤 Администрация", "url": ADMIN_LINK}])
+    keyboard.append([{"text": "💬 Администрация", "url": ADMIN_LINK}])
     keyboard.append([{"text": "⬅️ В главное меню", "callback_data": "back:main"}])
     return {"inline_keyboard": keyboard}
 
@@ -841,11 +804,20 @@ def accounts_by_country_keyboard():
     for acc_id, item in ACCOUNTS_CATALOG.items():
         qty = ACCOUNTS_STOCK.get(acc_id, 0)
         stars = item.get("stars", "?")
+        price = item.get("price", "?")
+        old_price = item.get("old_price")
+        discount = item.get("discount")
+
+        if old_price and discount:
+            price_part = f"{old_price}→{price}₽ -{discount}% ⚡"
+        else:
+            price_part = f"{price}₽ / {stars}⭐"
+
         keyboard.append([{
-            "text": f"{item['name']} — {item['price']}₽ ({stars}⭐) ({qty}шт)",
+            "text": f"{item['name']} {price_part} ({qty}шт)",
             "callback_data": f"buy_acc:{acc_id}"
         }])
-    keyboard.append([{"text": "👤 Администрация", "url": ADMIN_LINK}])
+    keyboard.append([{"text": "💬 Администрация", "url": ADMIN_LINK}])
     keyboard.append([{"text": "⬅️ Назад", "callback_data": "back:main"}])
     return {"inline_keyboard": keyboard}
 
@@ -864,7 +836,7 @@ def payment_keyboard():
     return {
         "inline_keyboard": [
             [{"text": "✅ Я оплатил", "callback_data": "payment_done"}],
-            [{"text": "👤 Связаться с админом", "url": ADMIN_LINK}],
+            [{"text": "💬 Связаться с админом", "url": ADMIN_LINK}],
             [{"text": "⬅️ В главное меню", "callback_data": "back:main"}]
         ]
     }
@@ -915,22 +887,15 @@ def user_confirm_keyboard(order_id):
     }
 
 
-def user_feedback_keyboard(order_id):
+def user_profile_keyboard(order_id=None):
+    safe_order_id = order_id if order_id else 0
     return {
         "inline_keyboard": [
-            [{"text": "⭐ Оставить отзыв", "callback_data": f"feedback:{order_id}"}],
-            [{"text": "⬅️ В главное меню", "callback_data": "back:main"}]
+            [{"text": "⭐ Оставить отзыв", "callback_data": f"feedback:{safe_order_id}"}],
+            [{"text": "🛒 Перейти в магазин", "callback_data": "back:main"}],
+            [{"text": "💬 Администрация", "url": ADMIN_LINK}]
         ]
     }
-
-
-def user_profile_keyboard(order_id=None):
-    keyboard = []
-    safe_order_id = order_id if order_id else 0
-    keyboard.append([{"text": "⭐ Оставить отзыв", "callback_data": f"feedback:{safe_order_id}"}])
-    keyboard.append([{"text": "🛒 Перейти в магазин", "callback_data": "back:main"}])
-    keyboard.append([{"text": "👤 Администрация", "url": ADMIN_LINK}])
-    return {"inline_keyboard": keyboard}
 
 
 def admin_user_actions_keyboard(target_chat_id, is_banned):
@@ -941,13 +906,12 @@ def admin_user_actions_keyboard(target_chat_id, is_banned):
                 [{"text": "⬅️ К списку", "callback_data": "admin:users"}]
             ]
         }
-    else:
-        return {
-            "inline_keyboard": [
-                [{"text": "🚫 Забанить", "callback_data": f"admin:ban:{target_chat_id}"}],
-                [{"text": "⬅️ К списку", "callback_data": "admin:users"}]
-            ]
-        }
+    return {
+        "inline_keyboard": [
+            [{"text": "🚫 Забанить", "callback_data": f"admin:ban:{target_chat_id}"}],
+            [{"text": "⬅️ К списку", "callback_data": "admin:users"}]
+        ]
+    }
 
 # ==================================================
 # ТЕКСТЫ
@@ -955,35 +919,49 @@ def admin_user_actions_keyboard(target_chat_id, is_banned):
 
 def start_text():
     return (
-        "👁️‍🗨️ <b>NUMBERS.EXE</b>\n\n"
+        "╔══════════════════════════╗\n"
+        "║  👁️‍🗨️ <b>NUMBERS.EXE</b>  ║\n"
+        "╚══════════════════════════╝\n\n"
         "🛒 <b>Добро пожаловать в магазин!</b>\n\n"
-        "👇 Выберите категорию:"
+        "🔒 Анонимно · ⚡ Быстро · 💎 Надёжно\n\n"
+        "👇 <b>Выберите категорию:</b>"
     )
 
 
 def accounts_by_country_text():
-    return "🌍 <b>Аккаунты по странам</b>\n\n👇 Выберите страну:"
+    total = sum(ACCOUNTS_STOCK.get(k, 0) for k in ACCOUNTS_CATALOG)
+    return (
+        "╔══════════════════════════╗\n"
+        "║  🌍 <b>ГОТОВЫЕ АНОНИМНЫЕ АККАУНТЫ Telegram</b>  ║\n"
+        "╚══════════════════════════╝\n\n"
+        f"📦 В наличии: {total} шт\n"
+        f"🌏 Стран: {len(ACCOUNTS_CATALOG)}\n\n"
+        "━━━━━━━━━━━━━━━━━━━━━━\n"
+        "🕶️ Анонимность превыше всего.\n"
+        "✅ Никаких следов. Никаких имён.\n"
+        "🔥 Зашёл, взял, вышел — и ты чистый.\n"
+        "━━━━━━━━━━━━━━━━━━━━━━\n\n"
+        "👇 Выбери страну:"
+    )
 
 
 def stars_text():
     return (
         "⭐ <b>Звёзды Telegram (Stars)</b>\n\n"
         "🌟 Пополните свой баланс звёзд в Telegram!\n\n"
-        "💎 <b>Курс: 1 Star = 1.65 ₽</b>\n\n"
-        "💡 <b>Что такое Telegram Stars?</b>\n"
-        "• Внутренняя валюта Telegram\n"
-        "• Можно тратить на стикеры, каналы и ботов\n"
-        "• Поддерживает разработчиков\n\n"
+        f"💎 <b>Курс: 1⭐ = {STAR_RATE}₽</b>\n\n"
         "📦 <b>Доступные пакеты:</b>\n\n"
         "👇 Выберите нужный пакет:"
     )
 
 
 def payment_text(item_name, price, stars=None):
+    stars_line = f"⭐ Или звёздами: <b>{stars}⭐</b>\n" if stars else ""
     return (
         "💳 <b>ОФОРМЛЕНИЕ ЗАКАЗА</b>\n\n"
         f"📦 Товар: <b>{item_name}</b>\n"
-        f"💰 Сумма: <b>{price} ₽</b>\n\n"
+        f"💰 Сумма: <b>{price} ₽</b>\n"
+        f"{stars_line}\n"
         "━━━━━━━━━━━━━━\n"
         "💳 <b>РЕКВИЗИТЫ ДЛЯ ОПЛАТЫ</b>\n\n"
         f"🏦 Банк: {BANK_NAME}\n"
@@ -992,10 +970,8 @@ def payment_text(item_name, price, stars=None):
         "━━━━━━━━━━━━━━\n"
         "🔴 <b>ВАЖНОЕ ПРАВИЛО ОПЛАТЫ!</b> 🔴\n\n"
         "⚠️ <b>Переводите ТОЧНУЮ сумму, указанную выше!</b>\n\n"
-        "Администратор идентифицирует ваш заказ ТОЛЬКО по сумме платежа.\n\n"
         "❌ Если вы переведёте БОЛЬШЕ или МЕНЬШЕ —\n"
-        "администратор НЕ СМОЖЕТ определить, какой аккаунт вы выбрали,\n"
-        "и может предоставить НЕ ТОТ, который вы заказывали!\n\n"
+        "администратор НЕ СМОЖЕТ определить, какой аккаунт вы выбрали!\n\n"
         "✅ Переведите РОВНО столько, сколько указано в чеке.\n\n"
         "━━━━━━━━━━━━━━\n"
         "📌 <b>ИНСТРУКЦИЯ:</b>\n"
@@ -1003,7 +979,7 @@ def payment_text(item_name, price, stars=None):
         "2️⃣ Отправьте скриншот чека @Exec_me_shop\n"
         "3️⃣ В сообщении укажите категорию товара\n"
         "4️⃣ Получите товар через 5-15 минут\n\n"
-        "💬 По всем вопросам обращайтесь к администрации!"
+        "💬 По всем вопросам — к администрации!"
     )
 
 
@@ -1013,28 +989,14 @@ def payment_stars_only_text(item_name, stars):
         f"📦 Товар: <b>{item_name}</b>\n"
         f"⭐ Сумма: <b>{stars}⭐</b>\n\n"
         "━━━━━━━━━━━━━━\n"
-        "🔴 <b>ВАЖНАЯ ИНСТРУКЦИЯ!</b> 🔴\n\n"
-        "📸 <b>ШАГ 1.</b> Сделайте <b>скриншот этого чека</b>\n"
+        "📸 <b>ШАГ 1.</b> Сделайте скриншот этого чека\n"
         "📩 <b>ШАГ 2.</b> Отправьте скриншот администратору:\n"
         f"👤 {ADMIN_LINK}\n"
         "⭐ <b>ШАГ 3.</b> Отправьте звёзды администратору\n"
         f"👤 {ADMIN_LINK}\n\n"
-        "━━━━━━━━━━━━━━\n"
         f"⭐ <b>Сумма:</b> <b>{stars}⭐</b>\n\n"
-        "━━━━━━━━━━━━━━\n"
         "⏳ <b>ОБРАБОТКА ЗАКАЗА:</b>\n"
-        "Ответ администратора может занять\n"
-        "некоторое время (до 24 часов).\n"
-        "Пожалуйста, ожидайте — ваш заказ принят! ✅\n\n"
-        "━━━━━━━━━━━━━━\n"
-        "📌 <b>КАК ОТПРАВИТЬ ЗВЁЗДЫ:</b>\n"
-        "1️⃣ Откройте чат с администратором\n"
-        "2️⃣ Нажмите на скрепку 📎 → «Подарок» / «Gift»\n"
-        "3️⃣ Выберите «Отправить звёзды»\n"
-        f"4️⃣ Введите <b>{stars}⭐</b> и отправьте\n\n"
-        "⚠️ <b>ВАЖНО:</b>\n"
-        "❌ НЕ отправляйте больше или меньше указанной суммы!\n"
-        "✅ Отправляйте РОВНО столько, сколько указано.\n\n"
+        "Ответ администратора может занять до 24 часов.\n\n"
         "💬 По всем вопросам — к администрации!"
     )
 
@@ -1055,7 +1017,7 @@ def payment_stars_text(item_name, price):
         "2️⃣ Отправьте скриншот чека @Exec_me_shop\n"
         "3️⃣ В сообщении укажите <b>Звёзды Telegram</b> и выбранный пакет\n"
         "4️⃣ Получите звёзды на свой аккаунт через 5-15 минут\n\n"
-        "💬 По всем вопросам обращайтесь к администрации!"
+        "💬 По всем вопросам — к администрации!"
     )
 
 # ==================================================
@@ -1082,14 +1044,8 @@ def handle_admin_message(message):
                 )
                 send_message(
                     chat_id,
-                    "❤️ <b>СПАСИБО ЗА ОТЗЫВ!</b>\n\n"
-                    "Приходите ещё! 🛒\n\n"
-                    "👇 Вернитесь в главное меню:",
-                    {
-                        "inline_keyboard": [
-                            [{"text": "⬅️ В главное меню", "callback_data": "back:main"}]
-                        ]
-                    }
+                    "❤️ <b>СПАСИБО ЗА ОТЗЫВ!</b>\n\nПриходите ещё! 🛒",
+                    {"inline_keyboard": [[{"text": "⬅️ В главное меню", "callback_data": "back:main"}]]}
                 )
                 order_data["awaiting_feedback"] = False
                 if chat_id in orders:
@@ -1098,42 +1054,21 @@ def handle_admin_message(message):
 
     if chat_id in chat_mode:
         order_id = chat_mode[chat_id]
-
         if text == "/stop":
             del chat_mode[chat_id]
-            send_message(
-                chat_id,
-                f"✅ <b>Режим чата выключен</b>\n\n"
-                f"📦 Заказ #{order_id}\n\n"
-                f"👇 Что дальше?",
-                admin_order_keyboard(order_id)
-            )
+            send_message(chat_id, f"✅ <b>Режим чата выключен</b>\n\n📦 Заказ #{order_id}",
+                         admin_order_keyboard(order_id))
             if order_id in temp_data:
                 user_chat_id = temp_data[order_id]["chat_id"]
-                send_message(
-                    user_chat_id,
-                    f"📴 <b>ЧАТ С АДМИНОМ ЗАКРЫТ</b>\n\n"
-                    f"📦 Заказ #{order_id}\n\n"
-                    f"Если появятся вопросы — {ADMIN_LINK}",
-                    None
-                )
+                send_message(user_chat_id, f"📴 <b>ЧАТ С АДМИНОМ ЗАКРЫТ</b>\n\n📦 Заказ #{order_id}", None)
             return True
 
         if order_id in temp_data:
             user_chat_id = temp_data[order_id]["chat_id"]
-            send_message(
-                user_chat_id,
-                f"💬 <b>СООБЩЕНИЕ ОТ АДМИНИСТРАТОРА</b>\n\n"
-                f"📦 Заказ #{order_id}\n\n"
-                f"{text}",
-                None
-            )
-            send_message(
-                chat_id,
-                f"✅ Отправлено покупателю заказа #{order_id}\n\n"
-                f"<i>Чтобы выйти — /stop</i>",
-                None
-            )
+            send_message(user_chat_id,
+                         f"💬 <b>СООБЩЕНИЕ ОТ АДМИНИСТРАТОРА</b>\n\n📦 Заказ #{order_id}\n\n{text}", None)
+            send_message(chat_id,
+                         f"✅ Отправлено покупателю заказа #{order_id}\n\n<i>Чтобы выйти — /stop</i>", None)
         else:
             del chat_mode[chat_id]
             send_message(chat_id, "❌ Заказ не найден. Режим чата выключен.", main_keyboard(chat_id))
@@ -1157,11 +1092,10 @@ def handle_update(update):
             if chat_id in banned_users:
                 return
 
-            awaiting_fb = False
-            for oid, o in temp_data.items():
-                if o.get("chat_id") == chat_id and o.get("awaiting_feedback"):
-                    awaiting_fb = True
-                    break
+            awaiting_fb = any(
+                o.get("chat_id") == chat_id and o.get("awaiting_feedback")
+                for o in temp_data.values()
+            )
             if awaiting_fb:
                 return
 
@@ -1179,8 +1113,7 @@ def handle_update(update):
             if is_spam(chat_id):
                 if not user_warned_spam.get(chat_id, False):
                     user_warned_spam[chat_id] = True
-                    cnt = get_spam_count(chat_id)
-                    extra = f"За {SPAM_WINDOW} сек: {cnt} сообщений (лимит {SPAM_LIMIT})"
+                    extra = f"За {SPAM_WINDOW} сек: {get_spam_count(chat_id)} сообщений (лимит {SPAM_LIMIT})"
                     notify_admin_violation(chat_id, "СПАМ", extra, active_order_id)
 
             if is_flood(chat_id, text):
@@ -1195,18 +1128,11 @@ def handle_update(update):
                         continue
                     send_message(
                         ADMIN_ID,
-                        f"💬 <b>СООБЩЕНИЕ ОТ ПОКУПАТЕЛЯ</b>\n\n"
-                        f"📦 Заказ #{oid}\n"
-                        f"👤 {o.get('username', '-')}\n\n"
-                        f"{text}",
+                        f"💬 <b>СООБЩЕНИЕ ОТ ПОКУПАТЕЛЯ</b>\n\n📦 Заказ #{oid}\n👤 {o.get('username', '-')}\n\n{text}",
                         None
                     )
-                    send_message(
-                        chat_id,
-                        "✅ <b>Сообщение доставлено администратору</b>\n\n"
-                        "⏳ Ожидайте ответа...",
-                        None
-                    )
+                    send_message(chat_id,
+                                 "✅ <b>Сообщение доставлено администратору</b>\n\n⏳ Ожидайте ответа...", None)
                     return
 
         if text.strip() == "/start":
@@ -1214,19 +1140,14 @@ def handle_update(update):
             remove_reply_keyboard(chat_id, "🔄 Обновление меню...")
 
             if chat_id in banned_users:
-                send_message(
-                    chat_id,
-                    "🚫 <b>ВЫ ЗАБАНЕНЫ</b>\n\nДоступ к боту закрыт.\n\nЕсли считаете это ошибкой — свяжитесь с администрацией.",
-                    None
-                )
+                send_message(chat_id, "🚫 <b>ВЫ ЗАБАНЕНЫ</b>\n\nДоступ к боту закрыт.", None)
                 return
 
             user_obj = message.get("from", {})
             user_username = user_obj.get("username", "").lower()
-            if user_username == ADMIN_USERNAME_TARGET:
-                if chat_id not in ADMIN_IDS:
-                    save_admin(chat_id)
-                    send_message(chat_id, "👑 <b>Вы добавлены как администратор!</b>", None)
+            if user_username == ADMIN_USERNAME_TARGET and chat_id not in ADMIN_IDS:
+                save_admin(chat_id)
+                send_message(chat_id, "👑 <b>Вы добавлены как администратор!</b>", None)
 
             if user_verified.get(chat_id, False):
                 send_message(chat_id, start_text(), main_keyboard(chat_id))
@@ -1247,59 +1168,14 @@ def handle_update(update):
             user_verified[chat_id] = True
             user_first_names[chat_id] = f"{first_name} {last_name}".strip() or "Пользователь"
             user_usernames[chat_id] = username
-            user_info = user_first_names[chat_id]
 
             save_verified_user(chat_id, phone_number, username, first_name, last_name)
-
             remove_reply_keyboard(chat_id, "📱 Номер получен")
-
-            load_msg = send_message(
-                chat_id,
-                "🔄 <b>Проверяем номер...</b>\n\n⏳ [1/5] Установка соединения...\n░ ░ ░ ░ ░",
-                None
-            )
-            load_msg_id = None
-            if load_msg and load_msg.get("ok"):
-                load_msg_id = load_msg["result"]["message_id"]
-
-            time.sleep(1.0)
-            if load_msg_id:
-                edit_message(chat_id, load_msg_id,
-                    "🔄 <b>Проверяем номер...</b>\n\n✅ [1/5] Соединение установлено\n⏳ [2/5] Проверка номера...\n█ ░ ░ ░ ░", None)
-
-            time.sleep(1.0)
-            if load_msg_id:
-                edit_message(chat_id, load_msg_id,
-                    "🔄 <b>Проверяем номер...</b>\n\n✅ [1/5] Соединение установлено\n✅ [2/5] Номер валидный\n⏳ [3/5] Проверка безопасности...\n█ █ ░ ░ ░", None)
-
-            time.sleep(1.0)
-            if load_msg_id:
-                edit_message(chat_id, load_msg_id,
-                    "🔄 <b>Проверяем номер...</b>\n\n✅ [1/5] Соединение установлено\n✅ [2/5] Номер валидный\n✅ [3/5] Проверка пройдена\n⏳ [4/5] Создание аккаунта...\n█ █ █ ░ ░", None)
-
-            time.sleep(1.0)
-            if load_msg_id:
-                edit_message(chat_id, load_msg_id,
-                    "🔄 <b>Проверяем номер...</b>\n\n✅ [1/5] Соединение установлено\n✅ [2/5] Номер валидный\n✅ [3/5] Проверка пройдена\n✅ [4/5] Аккаунт создан\n⏳ [5/5] Загрузка меню...\n█ █ █ █ ░", None)
-
-            time.sleep(1.0)
-            if load_msg_id:
-                edit_message(chat_id, load_msg_id,
-                    "✅ <b>ПРОВЕРКА ПРОЙДЕНА!</b>\n\n✅ [1/5] Соединение установлено\n✅ [2/5] Номер валидный\n✅ [3/5] Проверка пройдена\n✅ [4/5] Аккаунт создан\n✅ [5/5] Меню загружено\n█ █ █ █ █", None)
-
-            time.sleep(0.5)
 
             send_message(
                 chat_id,
                 f"📱 <b>Ваш номер:</b> <code>{phone_number}</code>\n\n" + start_text(),
                 main_keyboard(chat_id)
-            )
-
-            username_display = f"@{username}" if username else "нет"
-            send_message(
-                ADMIN_ID,
-                f"🛡️ <b>НОВЫЙ ВЕРИФИЦИРОВАННЫЙ</b>\n\n👤 {user_info}\n🆔 ID: <code>{chat_id}</code>\n🔗 {username_display}\n📱 <code>{phone_number}</code>",
-                None
             )
             return
 
@@ -1323,15 +1199,7 @@ def handle_update(update):
     print(f"🔘 Кнопка: {data}")
 
     if chat_id in banned_users and not is_admin(chat_id):
-        answer_callback_text(callback_id, "🚫 Вы забанены. Доступ закрыт.", show_alert=True)
-        try:
-            edit_message(
-                chat_id, message_id,
-                "🚫 <b>ВЫ ЗАБАНЕНЫ</b>\n\nДоступ к боту закрыт.",
-                None
-            )
-        except:
-            pass
+        answer_callback_text(callback_id, "🚫 Вы забанены.", show_alert=True)
         return
 
     if data == "back:main":
@@ -1339,36 +1207,18 @@ def handle_update(update):
         edit_message(chat_id, message_id, start_text(), main_keyboard(chat_id))
         return
 
-    if data == "chat_active_info":
-        answer_callback_text(
-            callback_id,
-            "💬 Чат активен!\n\n"
-            "📡 Если сообщение не доставляется сразу — отправьте его ещё раз через 10-15 сек.\n\n"
-            "⚠️ Спам / оскорбления / флуд = БАН\n\n"
-            "Пишите по делу — админ ответит.",
-            show_alert=True
-        )
-        return
-
     if data.startswith("cat:"):
         cat_id = data.split(":", 1)[1]
         if cat_id == "stars":
             answer_callback(callback_id)
             edit_message(chat_id, message_id, stars_text(), stars_keyboard())
-            return
         return
 
     if data.startswith("sub:"):
         parts = data.split(":")
-        if len(parts) < 3:
-            answer_callback(callback_id)
-            return
-        cat_id = parts[1]
-        sub_id = parts[2]
-        if cat_id == "accounts" and sub_id == "by_country":
+        if len(parts) >= 3 and parts[1] == "accounts" and parts[2] == "by_country":
             answer_callback(callback_id)
             edit_message(chat_id, message_id, accounts_by_country_text(), accounts_by_country_keyboard())
-            return
         return
 
     if data.startswith("buy_stars:"):
@@ -1378,11 +1228,8 @@ def handle_update(update):
             answer_callback(callback_id)
             order_counter += 1
             orders[chat_id] = {
-                "order_id": order_counter,
-                "item_id": stars_id,
-                "item": stars["name"],
-                "price": stars["price"],
-                "status": "waiting_payment"
+                "order_id": order_counter, "item_id": stars_id, "item": stars["name"],
+                "price": stars["price"], "status": "waiting_payment"
             }
             edit_message(chat_id, message_id, payment_stars_text(stars["name"], stars["price"]), payment_keyboard())
         return
@@ -1400,19 +1247,25 @@ def handle_update(update):
         answer_callback(callback_id)
         order_counter += 1
         orders[chat_id] = {
-            "order_id": order_counter,
-            "item_id": acc_id,
-            "item": item["name"],
-            "price": item["price"],
-            "stars": item.get("stars", "?"),
-            "status": "waiting_payment"
+            "order_id": order_counter, "item_id": acc_id, "item": item["name"],
+            "price": item["price"], "stars": item.get("stars", "?"), "status": "waiting_payment"
         }
+
+        if item.get("old_price"):
+            price_line = (
+                f"💰 Цена: было {item['old_price']} ₽ → стало <b>{item['price']} ₽</b>  "
+                f"🎁 -{item.get('discount', 15)}%\n"
+                f"⚡ <b>Успей купить!</b>\n"
+            )
+        else:
+            price_line = f"💰 Цена: <b>{item['price']} ₽</b>\n"
+
         edit_message(
             chat_id, message_id,
             f"💳 <b>ВЫБЕРИТЕ СПОСОБ ОПЛАТЫ</b>\n\n"
             f"📦 Товар: <b>{item['name']}</b>\n"
-            f"💰 Цена: <b>{item['price']} ₽</b>\n"
-            f"⭐ Или: <b>{item.get('stars', '?')} ⭐</b>\n\n"
+            f"{price_line}"
+            f"⭐ Звёзды: <b>{item.get('stars', '?')}⭐</b>\n\n"
             f"👇 Как хотите оплатить?",
             payment_method_keyboard(order_counter, item["name"], item["price"], item.get("stars", "?"))
         )
@@ -1426,11 +1279,7 @@ def handle_update(update):
             return
         order = orders[chat_id]
         order["payment_method"] = "rub"
-        edit_message(
-            chat_id, message_id,
-            payment_text(order["item"], order["price"], order.get("stars")),
-            payment_keyboard()
-        )
+        edit_message(chat_id, message_id, payment_text(order["item"], order["price"], order.get("stars")), payment_keyboard())
         return
 
     if data.startswith("pay_stars:"):
@@ -1441,11 +1290,7 @@ def handle_update(update):
             return
         order = orders[chat_id]
         order["payment_method"] = "stars"
-        edit_message(
-            chat_id, message_id,
-            payment_stars_only_text(order["item"], order.get("stars", "?")),
-            payment_keyboard()
-        )
+        edit_message(chat_id, message_id, payment_stars_only_text(order["item"], order.get("stars", "?")), payment_keyboard())
         return
 
     if data == "payment_done":
@@ -1461,22 +1306,16 @@ def handle_update(update):
         user_info = f"@{username}" if username else f"{first_name} (ID: {chat_id})"
 
         pending_orders[order_id] = {
-            "chat_id": chat_id,
-            "item_id": order.get("item_id"),
-            "item": order["item"],
-            "price": order["price"],
-            "stars": order.get("stars", "?"),
-            "username": user_info,
+            "chat_id": chat_id, "item_id": order.get("item_id"), "item": order["item"],
+            "price": order["price"], "stars": order.get("stars", "?"), "username": user_info,
             "phone": user_phones.get(chat_id, "Не указан"),
             "payment_method": order.get("payment_method", "rub")
         }
         save_order_log(order_id, chat_id, user_info, order["item"], order["price"], "waiting_admin")
 
         method = order.get("payment_method", "rub")
-        if method == "stars":
-            method_block = f"⭐ <b>Оплата:</b> {order.get('stars', '?')}⭐ (Звёзды)"
-        else:
-            method_block = f"💳 <b>Оплата:</b> {order['price']} ₽ (Рубли)"
+        method_block = (f"⭐ <b>Оплата:</b> {order.get('stars', '?')}⭐" if method == "stars"
+                        else f"💳 <b>Оплата:</b> {order['price']} ₽")
 
         send_message(
             ADMIN_ID,
@@ -1490,30 +1329,13 @@ def handle_update(update):
             admin_confirm_keyboard(order_id)
         )
 
-        if method == "stars":
-            sum_block = f"⭐ <b>Сумма:</b> {order.get('stars', '?')}⭐"
-            method_text = "⭐ Звёзды"
-        else:
-            sum_block = f"💰 <b>Сумма:</b> {order['price']} ₽"
-            method_text = "💳 Рубли"
-
         edit_message(
             chat_id, message_id,
-            f"╔══════════════════════════╗\n"
-            f"║  📩 <b>ЗАЯВКА ОТПРАВЛЕНА</b>  ║\n"
-            f"╚══════════════════════════╝\n\n"
+            f"📩 <b>ЗАЯВКА ОТПРАВЛЕНА</b>\n\n"
             f"🆔 <b>Заказ:</b> #{order_id}\n"
             f"📦 <b>Товар:</b> {order['item']}\n"
-            f"{sum_block}\n"
-            f"💳 <b>Способ:</b> {method_text}\n\n"
-            f"━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"⏳ <b>ОЖИДАЙТЕ ПОДТВЕРЖДЕНИЯ</b>\n\n"
-            f"Администратор проверит оплату.\n"
-            f"Это может занять <b>5-15 минут</b>.\n\n"
-            f"✅ После подтверждения товар\n"
-            f"будет отправлен вам в чат.\n"
-            f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            f"💬 По вопросам — @Exec_me_shop",
+            f"💰 <b>Сумма:</b> {order['price']} ₽\n\n"
+            f"⏳ Ожидайте подтверждения администратора (5-15 минут).",
             None
         )
         return
@@ -1531,30 +1353,15 @@ def handle_update(update):
         temp_data[order_id] = dict(order)
         save_order_log(order_id, user_chat_id, order.get("username", "-"), order["item"], order["price"], "confirmed")
         answer_callback(callback_id)
-        send_message(
-            user_chat_id,
-            f"✅ <b>ЗАКАЗ #{order_id} ПОДТВЕРЖДЁН!</b>\n\n📦 {order['item']}\n💰 {order['price']} ₽\n\n⏳ Администратор скоро отправит данные...",
-            None
-        )
-
-        method = order.get("payment_method", "rub")
-        if method == "stars":
-            method_block = f"⭐ <b>Оплата:</b> {order.get('stars', '?')}⭐ (Звёзды)"
-        else:
-            method_block = f"💳 <b>Оплата:</b> {order['price']} ₽ (Рубли)"
-
+        send_message(user_chat_id,
+                     f"✅ <b>ЗАКАЗ #{order_id} ПОДТВЕРЖДЁН!</b>\n\n📦 {order['item']}\n💰 {order['price']} ₽", None)
         edit_message(
             chat_id, message_id,
-            f"╔══════════════════════════╗\n"
-            f"║   ✅ <b>ЗАКАЗ ПОДТВЕРЖДЁН</b>   ║\n"
-            f"╚══════════════════════════╝\n\n"
-            f"🆔 <b>Заказ:</b> #{order_id}\n"
-            f"👤 <b>Покупатель:</b> {order.get('username', '-')}\n"
-            f"📱 <b>Номер:</b> <code>{order.get('phone', '-')}</code>\n"
-            f"📦 <b>Товар:</b> {order['item']}\n"
-            f"{method_block}\n\n"
-            f"━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"👇 <b>ВЫБЕРИТЕ ДЕЙСТВИЕ:</b>",
+            f"✅ <b>ЗАКАЗ #{order_id} ПОДТВЕРЖДЁН</b>\n\n"
+            f"👤 {order.get('username', '-')}\n"
+            f"📱 <code>{order.get('phone', '-')}</code>\n"
+            f"📦 {order['item']}\n\n"
+            f"👇 Выберите действие:",
             admin_order_keyboard(order_id)
         )
         del pending_orders[order_id]
@@ -1581,72 +1388,38 @@ def handle_update(update):
 
     if data.startswith("open_chat:"):
         order_id = int(data.split(":")[1])
-
         if not is_admin(chat_id):
             answer_callback_text(callback_id, "❌ Только для админа", show_alert=True)
             return
         if order_id not in temp_data:
             answer_callback_text(callback_id, "❌ Заказ не найден", show_alert=True)
             return
-
         chat_mode[chat_id] = order_id
         order = temp_data[order_id]
         user_chat_id = order["chat_id"]
-
         answer_callback(callback_id)
-
         edit_message(
             chat_id, message_id,
-            f"╔══════════════════════════╗\n"
-            f"║    💬 <b>ЧАТ С ПОКУПАТЕЛЕМ</b>    ║\n"
-            f"╚══════════════════════════╝\n\n"
-            f"🆔 <b>Заказ:</b> #{order_id}\n"
-            f"👤 <b>Покупатель:</b> {order.get('username', '-')}\n"
-            f"📦 <b>Товар:</b> {order['item']}\n\n"
-            f"━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"📤 Пишите сюда — сообщения уходят покупателю\n"
-            f"📥 Ответы покупателя приходят вам сюда же\n\n"
-            f"⚠️ <b>Чтобы выйти</b> — /stop\n"
-            f"━━━━━━━━━━━━━━━━━━━━━━",
+            f"💬 <b>ЧАТ С ПОКУПАТЕЛЕМ</b>\n\n"
+            f"🆔 Заказ #{order_id}\n"
+            f"👤 {order.get('username', '-')}\n"
+            f"📦 {order['item']}\n\n"
+            f"⚠️ Чтобы выйти — /stop",
             admin_chat_keyboard(order_id)
         )
-
-        send_message(
-            user_chat_id,
-            f"💬 <b>АДМИНИСТРАТОР ОТКРЫЛ ЧАТ</b>\n\n"
-            f"📦 Заказ #{order_id} — {order['item']}\n\n"
-            f"👀 Администратор видит все ваши сообщения.\n"
-            f"📝 Можете задать вопросы или уточнить данные.\n\n"
-            f"⚠️ <b>ВАЖНО:</b>\n"
-            f"📡 Сообщения могут доставляться не сразу.\n"
-            f"📩 Если через 10-15 секунд <b>нет ответа</b> — \n"
-            f"отправьте сообщение <b>повторно</b>.\n"
-            f"✅ Когда сообщение дойдёт — появится подтверждение.\n\n"
-            f"⚠️ <b>ПРАВИЛА ОБЩЕНИЯ:</b>\n"
-            f"🚫 <b>Спам</b> — бан\n"
-            f"🚫 <b>Оскорбления</b> — бан\n"
-            f"🚫 <b>Флуд / повторы</b> — бан\n\n"
-            f"🛡️ Автомодерация работает 24/7.\n"
-            f"🔒 При нарушении — блокировка и аннулирование заказа.\n\n"
-            f"💬 Пишите по делу — админ ответит.",
-            {
-                "inline_keyboard": [
-                    [{"text": "💬 Чат активен", "callback_data": "chat_active_info"}]
-                ]
-            }
-        )
+        send_message(user_chat_id,
+                     f"💬 <b>АДМИНИСТРАТОР ОТКРЫЛ ЧАТ</b>\n\n📦 Заказ #{order_id} — {order['item']}\n\nПишите сообщение — админ ответит.",
+                     None)
         return
 
     if data.startswith("finish_send:"):
         order_id = int(data.split(":")[1])
-
         if not is_admin(chat_id):
             answer_callback_text(callback_id, "❌ Только для админа", show_alert=True)
             return
         if order_id not in temp_data:
             answer_callback_text(callback_id, "❌ Заказ не найден", show_alert=True)
             return
-
         order = temp_data[order_id]
         user_chat_id = order["chat_id"]
         item_id = order.get("item_id") or ""
@@ -1662,32 +1435,18 @@ def handle_update(update):
         if item_id.startswith("acc_") and item_id in ACCOUNTS_STOCK:
             decrease_stock(item_id, 1)
 
-        if item_id.startswith("acc_"):
-            category = "Аккаунт"
-        elif item_id.startswith("stars_"):
-            category = "Звёзды"
-        else:
-            category = "Другое"
-
-        save_order_log(order_id, user_chat_id, order.get("username", "-"),
-                       real_item, order["price"], "sent")
+        save_order_log(order_id, user_chat_id, order.get("username", "-"), real_item, order["price"], "sent")
 
         buyer_username = user_usernames.get(user_chat_id, "") or "-"
         buyer_phone = user_phones.get(user_chat_id, "-")
         buyer_name = user_first_names.get(user_chat_id, "-")
-
         is_stars = item_id.startswith("stars_")
 
         save_sold_log(
-            category=category,
-            item=real_item,
-            price=order["price"],
-            username=buyer_username,
-            phone=buyer_phone,
-            chat_id=user_chat_id,
-            name=buyer_name,
-            is_stars=is_stars,
-            payment_method=order.get("payment_method", "rub"),
+            category=("Аккаунт" if item_id.startswith("acc_") else ("Звёзды" if is_stars else "Другое")),
+            item=real_item, price=order["price"], username=buyer_username,
+            phone=buyer_phone, chat_id=user_chat_id, name=buyer_name,
+            is_stars=is_stars, payment_method=order.get("payment_method", "rub"),
             stars=order.get("stars", "?")
         )
 
@@ -1696,250 +1455,109 @@ def handle_update(update):
         for admin_id in list(chat_mode.keys()):
             if chat_mode[admin_id] == order_id:
                 del chat_mode[admin_id]
-                try:
-                    send_message(
-                        admin_id,
-                        f"╔══════════════════════════╗\n"
-                        f"║  📴 <b>ЧАТ АВТОМАТИЧЕСКИ ЗАКРЫТ</b> ║\n"
-                        f"╚══════════════════════════╝\n\n"
-                        f"🆔 <b>Заказ:</b> #{order_id}\n"
-                        f"✅ Покупка завершена\n"
-                        f"🔒 Режим чата отключён\n\n"
-                        f"<i>Можете продолжить работу с другими заказами.</i>",
-                        None
-                    )
-                except:
-                    pass
-
-        user_warned_spam.pop(user_chat_id, None)
-        user_warned_bad.pop(user_chat_id, None)
 
         answer_callback(callback_id)
-
-        send_message(
-            user_chat_id,
-            f"🎉 <b>ЗАКАЗ #{order_id} ЗАВЕРШЁН</b>\n\n"
-            f"📦 {real_item}\n\n"
-            f"✅ <b>Подтвердите получение:</b>",
-            user_confirm_keyboard(order_id)
-        )
-
-        qty_now = ACCOUNTS_STOCK.get(item_id, "-") if item_id.startswith("acc_") else "-"
-
-        method = order.get("payment_method", "rub")
-        if method == "stars":
-            sum_block = f"⭐ <b>Сумма:</b> {order.get('stars', '?')}⭐"
-            method_text = "⭐ Звёзды"
-        else:
-            sum_block = f"💰 <b>Сумма:</b> {order['price']} ₽"
-            method_text = "💳 Рубли"
-
-        edit_message(
-            chat_id, message_id,
-            f"╔══════════════════════════╗\n"
-            f"║   ✅ <b>ЗАКАЗ ЗАВЕРШЁН</b>   ║\n"
-            f"╚══════════════════════════╝\n\n"
-            f"🆔 <b>Номер заказа:</b> #{order_id}\n"
-            f"📦 <b>Товар:</b> {real_item}\n"
-            f"{sum_block}\n"
-            f"💳 <b>Оплата:</b> {method_text}\n"
-            f"📉 <b>Остаток:</b> {qty_now}шт\n\n"
-            f"━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"💾 Сохранено в <code>sold.txt</code>\n"
-            f"📊 Категория: {category}",
-            None
-        )
+        send_message(user_chat_id,
+                     f"🎉 <b>ЗАКАЗ #{order_id} ЗАВЕРШЁН</b>\n\n📦 {real_item}\n\n✅ Подтвердите получение:",
+                     user_confirm_keyboard(order_id))
+        edit_message(chat_id, message_id,
+                     f"✅ <b>ЗАКАЗ #{order_id} ЗАВЕРШЁН</b>\n\n📦 {real_item}\n💰 {order['price']} ₽", None)
         return
 
     if data.startswith("ban_ask:"):
         order_id = int(data.split(":")[1])
-
         if not is_admin(chat_id):
             answer_callback_text(callback_id, "❌ Только для админа", show_alert=True)
             return
         if order_id not in temp_data:
             answer_callback_text(callback_id, "❌ Заказ не найден", show_alert=True)
             return
-
         order = temp_data[order_id]
         user_chat_id = order["chat_id"]
-        uname = user_usernames.get(user_chat_id, "") or "—"
-        name = user_first_names.get(user_chat_id, "Пользователь")
-
         answer_callback(callback_id)
         edit_message(
             chat_id, message_id,
             f"⚠️ <b>ПОДТВЕРДИТЕ БАН</b>\n\n"
-            f"👤 <b>{name}</b>\n"
             f"🆔 ID: <code>{user_chat_id}</code>\n"
-            f"🔗 @{uname if uname != '—' else 'нет'}\n"
-            f"📦 Заказ #{order_id} — {order['item']}\n\n"
-            f"🔴 <b>Что произойдёт:</b>\n"
-            f"• Пользователь будет ЗАБАНЕН в боте\n"
-            f"• Заказ #{order_id} будет АННУЛИРОВАН\n"
-            f"• Пользователь больше не сможет пользоваться ботом\n\n"
-            f"⚠️ <b>Действие необратимо!</b>",
+            f"📦 Заказ #{order_id}\n\n"
+            f"⚠️ Действие необратимо!",
             ban_confirm_keyboard(user_chat_id, order_id)
         )
         return
 
     if data.startswith("ban_confirm:"):
         parts = data.split(":")
-        if len(parts) < 3:
-            answer_callback(callback_id)
-            return
         target_id = int(parts[1])
         order_id = int(parts[2])
-
         if not is_admin(chat_id):
             answer_callback_text(callback_id, "❌ Только для админа", show_alert=True)
             return
-
         ban_user(target_id)
-
         if order_id in temp_data:
-            order_item = temp_data[order_id].get("item", "-")
-            order_price = temp_data[order_id].get("price", "-")
             del temp_data[order_id]
-            save_order_log(order_id, target_id, "-", order_item, order_price, "banned")
-
         if target_id in orders:
             del orders[target_id]
-
         if order_id in pending_orders:
             del pending_orders[order_id]
-
         for admin_id in list(chat_mode.keys()):
             if chat_mode[admin_id] == order_id:
                 del chat_mode[admin_id]
-
-        user_warned_spam.pop(target_id, None)
-        user_warned_bad.pop(target_id, None)
-
-        send_message(
-            target_id,
-            "🚫 <b>ВЫ ЗАБАНЕНЫ</b>\n\n"
-            "Доступ к боту закрыт администратором.\n\n"
-            "Ваш заказ был аннулирован.\n\n"
-            "Если считаете это ошибкой — обратитесь в поддержку.",
-            None
-        )
-
+        send_message(target_id, "🚫 <b>ВЫ ЗАБАНЕНЫ</b>\n\nДоступ закрыт, заказ аннулирован.", None)
         answer_callback_text(callback_id, "✅ Пользователь забанен", show_alert=True)
-
-        edit_message(
-            chat_id, message_id,
-            f"✅ <b>ПОЛЬЗОВАТЕЛЬ ЗАБАНЕН</b>\n\n"
-            f"🆔 ID: <code>{target_id}</code>\n"
-            f"📦 Заказ #{order_id} — АННУЛИРОВАН\n"
-            f"💾 Записано в <code>banned.txt</code>",
-            None
-        )
+        edit_message(chat_id, message_id, f"✅ <b>ПОЛЬЗОВАТЕЛЬ ЗАБАНЕН</b>\n\n🆔 <code>{target_id}</code>", None)
         return
 
     if data.startswith("ban_cancel:"):
         parts = data.split(":")
-        if len(parts) < 3:
-            answer_callback(callback_id)
-            return
         order_id = int(parts[2])
-
         if not is_admin(chat_id):
             answer_callback_text(callback_id, "❌ Только для админа", show_alert=True)
             return
-
         answer_callback_text(callback_id, "❌ Бан отменён", show_alert=True)
-
-        edit_message(
-            chat_id, message_id,
-            f"❌ <b>Бан отменён</b>\n\n"
-            f"📦 Заказ #{order_id}\n\n"
-            f"👇 Что дальше?",
-            admin_order_keyboard(order_id)
-        )
+        edit_message(chat_id, message_id, f"❌ <b>Бан отменён</b>\n\n📦 Заказ #{order_id}",
+                     admin_order_keyboard(order_id))
         return
 
     if data.startswith("warn_ban:"):
         target_id = int(data.split(":")[1])
-
         if not is_admin(chat_id):
             answer_callback_text(callback_id, "❌ Только для админа", show_alert=True)
             return
-
         ban_user(target_id)
-
         for oid, o in list(temp_data.items()):
             if o.get("chat_id") == target_id:
-                save_order_log(oid, target_id, "-", o.get("item", "-"), o.get("price", "-"), "banned")
                 del temp_data[oid]
-                if target_id in chat_mode:
-                    del chat_mode[target_id]
-
         if target_id in orders:
             del orders[target_id]
-
         for oid in list(pending_orders.keys()):
             if pending_orders[oid].get("chat_id") == target_id:
                 del pending_orders[oid]
-
-        user_warned_spam.pop(target_id, None)
-        user_warned_bad.pop(target_id, None)
-
-        send_message(
-            target_id,
-            "🚫 <b>ВЫ ЗАБАНЕНЫ</b>\n\n"
-            "Доступ к боту закрыт администратором.\n"
-            "Ваши заказы аннулированы.",
-            None
-        )
-
+        send_message(target_id, "🚫 <b>ВЫ ЗАБАНЕНЫ</b>", None)
         answer_callback_text(callback_id, "🚫 Пользователь забанен", show_alert=True)
-
-        edit_message(
-            chat_id, message_id,
-            f"✅ <b>ПОЛЬЗОВАТЕЛЬ ЗАБАНЕН</b>\n\n"
-            f"🆔 ID: <code>{target_id}</code>\n"
-            f"💾 Записано в <code>banned.txt</code>",
-            None
-        )
+        edit_message(chat_id, message_id, f"✅ <b>ПОЛЬЗОВАТЕЛЬ ЗАБАНЕН</b>\n\n🆔 <code>{target_id}</code>", None)
         return
 
     if data.startswith("warn_ignore:"):
         target_id = int(data.split(":")[1])
-
         if not is_admin(chat_id):
             answer_callback_text(callback_id, "❌ Только для админа", show_alert=True)
             return
-
         user_warned_spam.pop(target_id, None)
         user_warned_bad.pop(target_id, None)
         user_msg_times[target_id] = []
-
         answer_callback_text(callback_id, "❌ Игнорировано", show_alert=True)
-        edit_message(
-            chat_id, message_id,
-            f"❌ <b>Нарушение проигнорировано</b>\n\n"
-            f"🆔 ID: <code>{target_id}</code>\n"
-            f"<i>Бот предупредит снова, если повторится</i>",
-            None
-        )
+        edit_message(chat_id, message_id, f"❌ <b>Нарушение проигнорировано</b>\n\n🆔 <code>{target_id}</code>", None)
         return
 
     if data.startswith("user_confirm:"):
         order_id = int(data.split(":")[1])
         answer_callback(callback_id)
-
         if order_id not in temp_data:
             temp_data[order_id] = {
-                "chat_id": chat_id,
-                "item": "—",
-                "price": "—",
-                "username": user_usernames.get(chat_id, "-"),
-                "finished": True
+                "chat_id": chat_id, "item": "—", "price": "—",
+                "username": user_usernames.get(chat_id, "-"), "finished": True
             }
-
         order = temp_data[order_id]
-
         if chat_id != order["chat_id"]:
             send_message(chat_id, "❌ Это не ваш заказ!", None)
             return
@@ -1955,50 +1573,21 @@ def handle_update(update):
             status_line = "🆕 <b>НОВЫЙ КЛИЕНТ</b>"
 
         history = get_user_purchases_display(chat_id)
-
-        send_message(
-            ADMIN_ID,
-            f"✅ <b>ПОКУПАТЕЛЬ ПОДТВЕРДИЛ ПОЛУЧЕНИЕ</b>\n\n"
-            f"Заказ #{order_id}\n"
-            f"👤 {order.get('username', '-')}\n"
-            f"📦 {order['item']}\n"
-            f"💰 {order['price']} ₽",
-            None
-        )
+        send_message(ADMIN_ID, f"✅ <b>ПОКУПАТЕЛЬ ПОДТВЕРДИЛ ПОЛУЧЕНИЕ</b>\n\nЗаказ #{order_id}\n📦 {order['item']}", None)
 
         profile_text = (
-            f"╔══════════════════════════╗\n"
-            f"║  ✅ <b>ПОКУПКА ЗАВЕРШЕНА!</b> ║\n"
-            f"╚══════════════════════════╝\n\n"
-            f"🎉 <b>Спасибо за покупку!</b>\n"
-            f"Будем рады видеть вас снова ❤️\n\n"
-            f"━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"👤 <b>ВАШ ПРОФИЛЬ</b>\n"
-            f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            f"📛 Имя: <b>{user_first_names.get(chat_id, 'Пользователь')}</b>\n"
-            f"🆔 ID: <code>{chat_id}</code>\n"
-            f"📱 Номер: <code>{user_phones.get(chat_id, '-')}</code>\n"
-            f"🔗 Юзернейм: @{user_usernames.get(chat_id, 'нет') if user_usernames.get(chat_id) else 'нет'}\n\n"
+            f"✅ <b>ПОКУПКА ЗАВЕРШЕНА!</b>\n\n"
+            f"🎉 Спасибо за покупку! ❤️\n\n"
+            f"👤 <b>ВАШ ПРОФИЛЬ</b>\n\n"
+            f"📛 {user_first_names.get(chat_id, 'Пользователь')}\n"
+            f"🆔 <code>{chat_id}</code>\n"
+            f"📱 <code>{user_phones.get(chat_id, '-')}</code>\n\n"
             f"👑 Статус: {status_line}\n"
-            f"📦 Покупок всего: <b>{total_purchases}</b>\n"
-            f"   • Номера: <b>{nb_count}</b>\n"
-            f"   • Звёзды: <b>{st_count}</b>\n"
+            f"📦 Покупок: <b>{total_purchases}</b> (номера: {nb_count}, звёзды: {st_count})\n"
         )
-
         if history:
-            profile_text += f"\n━━━━━━━━━━━━━━━━━━━━━━\n"
-            profile_text += f"📜 <b>ИСТОРИЯ ПОКУПОК</b>\n"
-            profile_text += f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            profile_text += history + "\n"
-
-        profile_text += (
-            f"\n━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"💫 <b>ЧТО ДАЛЬШЕ?</b>\n\n"
-            f"⭐ Понравилось? Оставьте отзыв!\n"
-            f"🛒 Загляните в магазин ещё — есть новинки!\n"
-            f"👤 Остались вопросы? Свяжитесь с админом.\n\n"
-            f"👇 Выберите действие:"
-        )
+            profile_text += f"\n📜 <b>ИСТОРИЯ:</b>\n{history}\n"
+        profile_text += "\n👇 Выберите действие:"
 
         if len(profile_text) > 4000:
             profile_text = profile_text[:3900] + "\n\n<i>… обрезано</i>"
@@ -2009,7 +1598,6 @@ def handle_update(update):
     if data.startswith("feedback:"):
         order_id = int(data.split(":")[1])
         answer_callback(callback_id)
-
         if order_id == 0 or order_id not in temp_data:
             found_id = None
             for oid, o in temp_data.items():
@@ -2021,37 +1609,14 @@ def handle_update(update):
             else:
                 order_id = 999999
                 temp_data[order_id] = {
-                    "chat_id": chat_id,
-                    "item": "—",
-                    "price": "—",
-                    "username": user_usernames.get(chat_id, "-"),
-                    "finished": True
+                    "chat_id": chat_id, "item": "—", "price": "—",
+                    "username": user_usernames.get(chat_id, "-"), "finished": True
                 }
-
-        if order_id not in temp_data:
-            temp_data[order_id] = {
-                "chat_id": chat_id,
-                "item": "—",
-                "price": "—",
-                "username": user_usernames.get(chat_id, "-"),
-                "finished": True
-            }
-
         temp_data[order_id]["awaiting_feedback"] = True
         temp_data[order_id]["feedback_order_id"] = order_id
         temp_data[order_id]["chat_id"] = chat_id
-
-        for admin_id in list(chat_mode.keys()):
-            if chat_mode[admin_id] == order_id:
-                del chat_mode[admin_id]
-
-        edit_message(
-            chat_id, message_id,
-            "✍️ <b>НАПИШИТЕ ВАШ ОТЗЫВ</b>\n\n"
-            "📝 Просто напишите сообщение — оно уйдёт администратору.\n\n"
-            "💬 Отзыв можно отправить один раз.",
-            None
-        )
+        edit_message(chat_id, message_id,
+                     "✍️ <b>НАПИШИТЕ ВАШ ОТЗЫВ</b>\n\nПросто напишите сообщение — оно уйдёт администратору.", None)
         return
 
     if data == "admin:users":
@@ -2061,35 +1626,19 @@ def handle_update(update):
         answer_callback(callback_id)
         users = get_all_users_data()
         if not users:
-            edit_message(chat_id, message_id, "👥 <b>Все пользователи</b>\n\n📭 Список пуст.",
-                         {"inline_keyboard": [[{"text": "⬅️ В главное меню", "callback_data": "back:main"}]]})
+            edit_message(chat_id, message_id, "👥 Список пуст.",
+                         {"inline_keyboard": [[{"text": "⬅️ Назад", "callback_data": "back:main"}]]})
             return
-
-        text = f"👥 <b>ВСЕ ПОЛЬЗОВАТЕЛИ ({len(users)})</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\n"
+        text = f"👥 <b>ПОЛЬЗОВАТЕЛИ ({len(users)})</b>\n\n"
         keyboard = []
         for idx, u in enumerate(users, 1):
             ban_mark = "🚫" if u["banned"] else "✅"
-            nb_count, st_count = get_user_purchase_counters(u["chat_id"])
-            total = nb_count + st_count
-            buyer_mark = f"⭐ ПОСТОЯННЫЙ ({total})" if total > 0 else "🆕 НОВЫЙ"
-            uname = f"@{u['username']}" if u["username"] and u["username"] != "-" else "—"
-
-            text += f"┌─ 👤 <b>#{idx} {u['name']}</b>\n"
-            text += f"│ 🆔 <code>{u['chat_id']}</code>\n"
-            text += f"│ 📱 <code>{u['phone']}</code>\n"
-            text += f"│ 🔗 {uname}\n"
-            text += f"│ 👤 {buyer_mark}\n"
-            text += f"│ {ban_mark} {'ЗАБАНЕН' if u['banned'] else 'АКТИВЕН'}\n"
-            text += f"└──────────────────────\n\n"
-
-            btn_text = f"{ban_mark} #{idx} {u['name'][:18]}"
-            keyboard.append([{"text": btn_text, "callback_data": f"admin:view:{u['chat_id']}"}])
-
-        keyboard.append([{"text": "⬅️ В главное меню", "callback_data": "back:main"}])
-
+            text += f"{ban_mark} <b>#{idx} {u['name']}</b>\n🆔 <code>{u['chat_id']}</code>\n📱 <code>{u['phone']}</code>\n\n"
+            keyboard.append([{"text": f"{ban_mark} #{idx} {u['name'][:18]}",
+                              "callback_data": f"admin:view:{u['chat_id']}"}])
+        keyboard.append([{"text": "⬅️ Назад", "callback_data": "back:main"}])
         if len(text) > 4000:
-            text = text[:3900] + "\n\n<i>… Список обрезан.</i>"
-
+            text = text[:3900] + "\n\n<i>… обрезано</i>"
         edit_message(chat_id, message_id, text, {"inline_keyboard": keyboard})
         return
 
@@ -2098,23 +1647,18 @@ def handle_update(update):
             answer_callback_text(callback_id, "❌ Только для админа", show_alert=True)
             return
         answer_callback(callback_id)
-        users = get_all_users_data()
-        banned = [u for u in users if u["banned"]]
+        banned = [u for u in get_all_users_data() if u["banned"]]
         if not banned:
-            edit_message(chat_id, message_id, "🚫 <b>Забаненные</b>\n\n📭 Список пуст.",
-                         {"inline_keyboard": [[{"text": "⬅️ В главное меню", "callback_data": "back:main"}]]})
+            edit_message(chat_id, message_id, "🚫 Список пуст.",
+                         {"inline_keyboard": [[{"text": "⬅️ Назад", "callback_data": "back:main"}]]})
             return
-        text = f"🚫 <b>ЗАБАНЕННЫЕ ({len(banned)})</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\n"
+        text = f"🚫 <b>ЗАБАНЕННЫЕ ({len(banned)})</b>\n\n"
         keyboard = []
         for idx, u in enumerate(banned, 1):
-            uname = f"@{u['username']}" if u["username"] and u["username"] != "-" else "—"
-            text += f"┌─ 🚫 <b>#{idx} {u['name']}</b>\n"
-            text += f"│ 🆔 <code>{u['chat_id']}</code>\n"
-            text += f"│ 📱 <code>{u['phone']}</code>\n"
-            text += f"│ 🔗 {uname}\n"
-            text += f"└──────────────────────\n\n"
-            keyboard.append([{"text": f"🚫 #{idx} {u['name'][:20]}", "callback_data": f"admin:view:{u['chat_id']}"}])
-        keyboard.append([{"text": "⬅️ В главное меню", "callback_data": "back:main"}])
+            text += f"🚫 <b>#{idx} {u['name']}</b>\n🆔 <code>{u['chat_id']}</code>\n\n"
+            keyboard.append([{"text": f"🚫 #{idx} {u['name'][:20]}",
+                              "callback_data": f"admin:view:{u['chat_id']}"}])
+        keyboard.append([{"text": "⬅️ Назад", "callback_data": "back:main"}])
         edit_message(chat_id, message_id, text, {"inline_keyboard": keyboard})
         return
 
@@ -2124,39 +1668,24 @@ def handle_update(update):
             return
         target_id = int(data.split(":")[2])
         answer_callback(callback_id)
-        users = get_all_users_data()
-        target = next((u for u in users if u["chat_id"] == target_id), None)
+        target = next((u for u in get_all_users_data() if u["chat_id"] == target_id), None)
         if not target:
-            edit_message(chat_id, message_id, "❌ Пользователь не найден",
+            edit_message(chat_id, message_id, "❌ Не найден",
                          {"inline_keyboard": [[{"text": "⬅️ К списку", "callback_data": "admin:users"}]]})
             return
         uname = f"@{target['username']}" if target["username"] and target["username"] != "-" else "—"
         ban_status = "🚫 <b>ЗАБАНЕН</b>" if target["banned"] else "✅ <b>Активен</b>"
-
         nb_count, st_count = get_user_purchase_counters(target_id)
-        total = nb_count + st_count
-        buyer_status = f"⭐ <b>ПОСТОЯННЫЙ</b> ({total} покупок)" if total > 0 else "🆕 <b>НОВЫЙ</b>"
-
-        history = get_user_purchases_display(target_id)
-        history_block = f"\n📦 <b>ИСТОРИЯ ПОКУПОК:</b>\n{history}\n" if history else "\n📦 Покупок пока нет\n"
-
         text = (
-            f"👤 <b>КАРТОЧКА ПОЛЬЗОВАТЕЛЯ</b>\n"
-            f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            f"📛 Имя: <b>{target['name']}</b>\n"
-            f"🆔 ID: <code>{target['chat_id']}</code>\n"
-            f"📱 Номер: <code>{target['phone']}</code>\n"
-            f"🔗 Юзернейм: {uname}\n"
-            f"📅 Регистрация: {target['date']}\n"
-            f"👤 Статус: {buyer_status}\n"
-            f"{history_block}\n"
-            f"🔐 Бан: {ban_status}\n\n"
-            f"👇 Действия:"
+            f"👤 <b>КАРТОЧКА</b>\n\n"
+            f"📛 {target['name']}\n"
+            f"🆔 <code>{target['chat_id']}</code>\n"
+            f"📱 <code>{target['phone']}</code>\n"
+            f"🔗 {uname}\n"
+            f"📅 {target['date']}\n"
+            f"📦 Покупок: {nb_count + st_count}\n"
+            f"🔐 Бан: {ban_status}"
         )
-
-        if len(text) > 4000:
-            text = text[:3900] + "\n\n<i>… обрезано</i>"
-
         edit_message(chat_id, message_id, text, admin_user_actions_keyboard(target_id, target["banned"]))
         return
 
@@ -2166,8 +1695,8 @@ def handle_update(update):
             return
         target_id = int(data.split(":")[2])
         ban_user(target_id)
-        answer_callback_text(callback_id, "🚫 Пользователь забанен", show_alert=True)
-        send_message(target_id, "🚫 <b>ВЫ ЗАБАНЕНЫ</b>\n\nДоступ к боту закрыт администратором.", None)
+        answer_callback_text(callback_id, "🚫 Забанен", show_alert=True)
+        send_message(target_id, "🚫 <b>ВЫ ЗАБАНЕНЫ</b>", None)
         return
 
     if data.startswith("admin:unban:"):
@@ -2176,8 +1705,8 @@ def handle_update(update):
             return
         target_id = int(data.split(":")[2])
         unban_user(target_id)
-        answer_callback_text(callback_id, "✅ Пользователь разблокирован", show_alert=True)
-        send_message(target_id, "✅ <b>ВЫ РАЗБЛОКИРОВАНЫ</b>\n\nДоступ восстановлен.\n\nНапишите /start", None)
+        answer_callback_text(callback_id, "✅ Разблокирован", show_alert=True)
+        send_message(target_id, "✅ <b>ВЫ РАЗБЛОКИРОВАНЫ</b>\n\nНапишите /start", None)
         return
 
     answer_callback(callback_id)
@@ -2202,29 +1731,15 @@ def main():
 
     print("🔄 Проверка Telegram...", end=" ", flush=True)
     result = api("getMe")
-
     if result and result.get("ok"):
-        username = result["result"].get("username", "unknown")
-        print(f"✅ @{username}")
+        print(f"✅ @{result['result'].get('username', 'unknown')}")
     else:
         print("❌ Ошибка")
-        print("⏳ Повтор через 3 сек...")
         time.sleep(3)
         main()
         return
 
-    print("✅ Webhook отключён\n")
     print("🟢 БОТ ЗАПУЩЕН")
-    print("💓 Статус: ONLINE")
-    print(f"📁 Пользователи: {USERS_FILE}")
-    print(f"📁 Остатки:     {STOCK_FILE}")
-    print(f"📁 Заказы:      {ORDERS_FILE}")
-    print(f"📁 Баны:        {BANNED_FILE}")
-    print(f"📁 Админы:      {ADMIN_FILE}")
-    print(f"📁 Продажи:     {SOLD_FILE}")
-    print(f"👥 Пользователей: {len(user_verified)}")
-    print(f"👑 Админов: {len(ADMIN_IDS)}")
-    print(f"🚫 Забаненных: {len(banned_users)}")
     print("⏳ Ожидание сообщений...\n")
 
     offset = 0
@@ -2233,7 +1748,7 @@ def main():
     while True:
         try:
             if time.time() - last_status >= 30:
-                print(f"💓 Жив | {time.strftime('%H:%M:%S')} | 👥 {len(user_verified)} | 🚫 {len(banned_users)} | 📦 {len(pending_orders)}")
+                print(f"💓 {time.strftime('%H:%M:%S')} | 👥 {len(user_verified)} | 🚫 {len(banned_users)} | 📦 {len(pending_orders)}")
                 last_status = time.time()
 
             result = api("getUpdates", {
@@ -2243,24 +1758,18 @@ def main():
                 "allowed_updates": json.dumps(["message", "callback_query"])
             })
 
-            if not result:
+            if not result or not result.get("ok"):
                 time.sleep(RECONNECT_DELAY)
                 continue
 
-            if not result.get("ok"):
-                time.sleep(RECONNECT_DELAY)
-                continue
-
-            updates = result.get("result", [])
-            for update in updates:
+            for update in result.get("result", []):
                 update_id = update.get("update_id")
                 if update_id is not None:
                     offset = update_id + 1
                 try:
                     msg = update.get("message")
-                    if msg and "text" in msg:
-                        if handle_admin_message(msg):
-                            continue
+                    if msg and "text" in msg and handle_admin_message(msg):
+                        continue
                     handle_update(update)
                 except Exception as e:
                     print(f"❌ Ошибка: {e}")
