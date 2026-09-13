@@ -300,8 +300,26 @@ STARS_PACKAGES = {
 }
 
 # ==================================================
-# ПРОВЕРКИ
+# ПРОВЕРКИ И УТИЛИТЫ
 # ==================================================
+
+def format_gift_breakdown(stars):
+    try:
+        s = int(stars)
+    except (TypeError, ValueError):
+        return "—"
+    if s <= 0:
+        return "—"
+    crystals = s // 100
+    remainder = s % 100
+    rockets = remainder // 50
+    parts = []
+    if crystals:
+        parts.append(f"{crystals}× 💎")
+    if rockets:
+        parts.append(f"{rockets}× 🚀")
+    return " + ".join(parts) if parts else "—"
+
 
 def is_bad_message(text):
     if not text:
@@ -983,18 +1001,48 @@ def payment_text(item_name, price, stars=None):
 
 
 def payment_stars_only_text(item_name, stars):
+    try:
+        stars_int = int(stars)
+    except (TypeError, ValueError):
+        stars_int = 0
+
+    breakdown = format_gift_breakdown(stars_int)
+
+    nft_block = ""
+    if stars_int >= 500:
+        nft_block = (
+            "🎁 <b>ИЛИ любой NFT-подарок (Resale/Upgraded)</b>\n\n"
+            "Любой коллекционный подарок из маркета Telegram —\n"
+            "например: Plush Pepe, Astral Shard, Durov's Cap,\n"
+            "Mad Pumpkin, Ginger Cookie, Loot Bag и другие.\n\n"
+            "⚠️ <b>NFT-подарки принимаются только для сумм от 500⭐</b>\n\n"
+        )
+
     return (
         "⭐ <b>ОПЛАТА ЗВЁЗДАМИ TELEGRAM</b>\n\n"
         f"📦 Товар: <b>{item_name}</b>\n"
         f"⭐ Сумма: <b>{stars}⭐</b>\n\n"
         "━━━━━━━━━━━━━━\n"
-        "📌 <b>ИНСТРУКЦИЯ:</b>\n"
-        "1️⃣ Отправьте <b>точное количество звёзд</b> из суммы ниже\n"
-        "2️⃣ Нажмите «✅ Я оплатил» под сообщением\n"
-        "3️⃣ Дождитесь подтверждения — откроется чат с админом\n"
-        "4️⃣ Получите <b>товар</b> в течение 5-15 минут\n\n"
+        "📌 <b>СПОСОБЫ ОПЛАТЫ:</b>\n\n"
+        "🚀 <b>Ракета</b> — 50⭐\n"
+        "💎 <b>Кристалл</b> — 100⭐\n\n"
+        f"🎁 <b>Для этой суммы нужно отправить:</b>\n"
+        f"   <b>{breakdown}</b>\n\n"
+        f"{nft_block}"
         "━━━━━━━━━━━━━━\n"
-        f"⭐ <b>Сумма:</b> <b>{stars}⭐</b>\n\n"
+        "📌 <b>ИНСТРУКЦИЯ:</b>\n"
+        "1️⃣ Откройте чат с администратором:\n"
+        f"   👤 {ADMIN_LINK}\n"
+        "2️⃣ Нажмите 📎 → «Подарок» (Gift)\n"
+        "3️⃣ Выберите нужный подарок из списка выше\n"
+        f"4️⃣ Введите точное количество звёзд: <b>{stars}⭐</b>\n"
+        "5️⃣ Нажмите «✅ Я оплатил» под сообщением\n"
+        "6️⃣ Дождитесь подтверждения — откроется чат с админом\n"
+        "7️⃣ Получите <b>товар</b> в течение 5-15 минут\n\n"
+        "━━━━━━━━━━━━━━\n"
+        f"⭐ <b>Сумма:</b> <b>{stars}⭐</b>\n"
+        f"🎁 <b>Раскладка:</b> {breakdown}\n"
+        f"👤 <b>Получатель:</b> {ADMIN_LINK}\n\n"
         "⏳ <b>ОБРАБОТКА ЗАКАЗА:</b>\n"
         "Ответ администратора может занять до 24 часов.\n\n"
         "💬 По всем вопросам — к администрации!"
