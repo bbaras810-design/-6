@@ -94,13 +94,14 @@ remove_lock_files()
 
 TOKEN = "8675442691:AAE7X7uOQMkpkH5fgOwleUlYHLAQhtaQfyY"
 
-BANK_NAME = "OZON Банк"
-CARD_NUMBER = "2204321255191702"
-RECIPIENT = "Кирилл Ш."
 ADMIN_ID = 8864430187
 
 ADMIN_LINK = "https://t.me/Exec_me_shop"
+CONTACT_URL = "https://t.me/dark_exec_me_shop"
 ADMIN_USERNAME_TARGET = "exec_me_shop"
+BTC_WALLET = "bc1qsxw3hsht6qkcc9y2jyj02pc0vwmn9fk7hrv2hj"
+ETH_WALLET = "0x51ae3A2F9994541aFfe59c6633f10033683Bc821"
+ETH_NETWORK = "Ethereum Mainnet (ERC-20)"
 
 POLL_TIMEOUT = 60
 REQUEST_TIMEOUT = 15
@@ -108,6 +109,16 @@ RECONNECT_DELAY = 1
 MAX_RETRIES = 2
 
 STAR_RATE = 1.69
+
+# --- dark.web ---
+DARKWEB_PRICE_USD = 3
+DARKWEB_PRICE_STARS = 200
+KRAKEN_PRICE_RUB = 100
+KRAKEN_PRICE_STARS = 50
+BTC_USD_RATE = 95000
+ETH_USD_RATE = 3300
+BTC_RUB_RATE = 7000000
+ETH_RUB_RATE = 250000
 
 # ==================================================
 # ПАПКА ДАННЫХ
@@ -136,6 +147,8 @@ ORDERS_FILE = os.path.join(DATA_DIR, "orders.txt")
 BANNED_FILE = os.path.join(DATA_DIR, "banned.txt")
 ADMIN_FILE = os.path.join(DATA_DIR, "admin.txt")
 SOLD_FILE = os.path.join(DATA_DIR, "sold.txt")
+DARKWEB_FILE = os.path.join(DATA_DIR, "darkweb_access.txt")
+KRAKEN_FILE = os.path.join(DATA_DIR, "kraken_access.txt")
 
 try:
     lock_path = os.path.join(SCRIPT_DIR, "bot_numbers.lock")
@@ -168,6 +181,8 @@ pending_orders = {}
 temp_data = {}
 order_counter = 0
 chat_mode = {}
+darkweb_users = set()
+kraken_users = set()
 
 SPAM_WINDOW = 10
 SPAM_LIMIT = 5
@@ -289,14 +304,19 @@ ACCOUNTS_CATALOG = {
 
 ACCOUNTS_STOCK = dict(ACCOUNTS_BASE_STOCK)
 
-STARS_PACKAGES = {
-    "stars_100":   {"name": "🌟 100 Stars",   "price": f"{100 * STAR_RATE:.2f}"},
-    "stars_250":   {"name": "🌟 250 Stars",   "price": f"{250 * STAR_RATE:.2f}"},
-    "stars_500":   {"name": "🌟 500 Stars",   "price": f"{500 * STAR_RATE:.2f}"},
-    "stars_1000":  {"name": "🌟 1000 Stars",  "price": f"{1000 * STAR_RATE:.2f}"},
-    "stars_2500":  {"name": "🌟 2500 Stars",  "price": f"{2500 * STAR_RATE:.2f}"},
-    "stars_5000":  {"name": "🌟 5000 Stars",  "price": f"{5000 * STAR_RATE:.2f}"},
-    "stars_10000": {"name": "🌟 10000 Stars", "price": f"{10000 * STAR_RATE:.2f}"},
+ANONYMOUS_EMAIL_PACKAGES = {
+    "email_2_nodes": {
+        "name": "📧 Почты в 2 узла",
+        "price": "299.99",
+        "stars": "300",
+        "nodes": 2,
+    },
+    "email_3_nodes": {
+        "name": "📧 Почты в 3 узла",
+        "price": "599.99",
+        "stars": "600",
+        "nodes": 3,
+    },
 }
 
 # ==================================================
@@ -319,6 +339,117 @@ def format_gift_breakdown(stars):
     if rockets:
         parts.append(f"{rockets}× 🚀")
     return " + ".join(parts) if parts else "—"
+
+
+def rub_to_btc(price):
+    try:
+        rub_value = float(str(price).replace(",", ".").replace("₽", "").strip())
+        return f"{rub_value / BTC_RUB_RATE:.8f}"
+    except (TypeError, ValueError, ZeroDivisionError):
+        return "—"
+
+
+def rub_to_eth(price):
+    try:
+        rub_value = float(str(price).replace(",", ".").replace("₽", "").strip())
+        return f"{rub_value / ETH_RUB_RATE:.8f}"
+    except (TypeError, ValueError, ZeroDivisionError):
+        return "—"
+
+
+def rub_to_stars(price):
+    try:
+        rub_value = float(str(price).replace(",", ".").replace("₽", "").strip())
+        return str(max(1, round(rub_value / STAR_RATE)))
+    except (TypeError, ValueError, ZeroDivisionError):
+        return "—"
+
+
+def usd_to_btc(usd):
+    try:
+        return f"{float(usd) / BTC_USD_RATE:.8f}"
+    except (TypeError, ValueError, ZeroDivisionError):
+        return "—"
+
+
+def usd_to_eth(usd):
+    try:
+        return f"{float(usd) / ETH_USD_RATE:.8f}"
+    except (TypeError, ValueError, ZeroDivisionError):
+        return "—"
+
+
+def load_darkweb_users():
+    global darkweb_users
+    darkweb_users = set()
+    try:
+        if os.path.exists(DARKWEB_FILE):
+            with open(DARKWEB_FILE, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith("#") and line.lstrip("-").isdigit():
+                        darkweb_users.add(int(line))
+        print(f"\U0001f578\ufe0f dark.web \u0434\u043e\u0441\u0442\u0443\u043f\u043e\u0432: {len(darkweb_users)}")
+    except Exception as e:
+        print(f"\u26a0\ufe0f dark.web load: {e}")
+
+
+def has_darkweb(chat_id):
+    return chat_id in darkweb_users
+
+
+def grant_darkweb(chat_id):
+    if chat_id in darkweb_users:
+        return False
+    darkweb_users.add(chat_id)
+    try:
+        with open(DARKWEB_FILE, "a", encoding="utf-8") as f:
+            f.write(f"{chat_id}\n")
+    except Exception as e:
+        print(f"\u26a0\ufe0f dark.web save: {e}")
+    return True
+
+
+def load_kraken_users():
+    global kraken_users
+    kraken_users = set()
+    try:
+        if os.path.exists(KRAKEN_FILE):
+            with open(KRAKEN_FILE, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith("#") and line.lstrip("-").isdigit():
+                        kraken_users.add(int(line))
+        print(f"\U0001f419 kraken \u0434\u043e\u0441\u0442\u0443\u043f\u043e\u0432: {len(kraken_users)}")
+    except Exception as e:
+        print(f"\u26a0\ufe0f kraken load: {e}")
+
+
+def has_kraken(chat_id):
+    return chat_id in kraken_users
+
+
+def grant_kraken(chat_id):
+    if chat_id in kraken_users:
+        return False
+    kraken_users.add(chat_id)
+    try:
+        with open(KRAKEN_FILE, "a", encoding="utf-8") as f:
+            f.write(f"{chat_id}\n")
+    except Exception as e:
+        print(f"\u26a0\ufe0f kraken save: {e}")
+    return True
+
+
+def order_amount_text(order):
+    payment_method = order.get("payment_method")
+    if payment_method == "btc":
+        return f"₿ {order.get('btc', '—')} BTC"
+    if payment_method == "eth":
+        return f"Ξ {order.get('eth', '—')} ETH"
+    if payment_method == "stars":
+        return f"⭐ {order.get('stars', '—')}⭐"
+    return f"₿ {rub_to_btc(order.get('price', '—'))} BTC"
 
 
 def is_bad_message(text):
@@ -659,7 +790,8 @@ def make_purchase_code(chat_id, is_stars, item_name):
     return f"nb{nb_count + 1}{extract_phone_index(item_name) or ''}"
 
 
-def save_sold_log(category, item, price, username, phone, chat_id, name, is_stars=False, payment_method="rub", stars="?"):
+def save_sold_log(category, item, price, username, phone, chat_id, name,
+                  is_stars=False, payment_method="btc", stars="?", btc="?", eth="?"):
     try:
         now = time.localtime()
         time_str = time.strftime("%H:%M", now)
@@ -674,10 +806,16 @@ def save_sold_log(category, item, price, username, phone, chat_id, name, is_star
 
         if payment_method == "stars":
             price_display = f"{stars}⭐"
-            method_label = "STARS"
+            method_label = "TELEGRAM_STARS"
+        elif payment_method == "btc":
+            price_display = f"{btc} BTC"
+            method_label = "BTC"
+        elif payment_method == "eth":
+            price_display = f"{eth} ETH"
+            method_label = "ETH"
         else:
             price_display = f"{price_clean}₽"
-            method_label = "RUB"
+            method_label = "LEGACY_RUB"
 
         file_exists = os.path.exists(SOLD_FILE)
         with open(SOLD_FILE, "a", encoding="utf-8") as f:
@@ -796,22 +934,30 @@ def remove_reply_keyboard(chat_id, text="⬇️ Клавиатура обнов�
 def main_keyboard(chat_id=None):
     keyboard = [
         [{"text": "🎯 АККАУНТЫ TELEGRAM 🌍", "callback_data": "sub:accounts:by_country"}],
-        [{"text": "⭐ Звёзды Telegram", "callback_data": "cat:stars"}],
-        [{"text": "💬 Администрация", "url": ADMIN_LINK}]
+        [{"text": "⭐ Звёзды Telegram", "callback_data": "temp_robots"}],
+        [{"text": "📧 Анонимные почты", "callback_data": "cat:anonymous_emails"}],
     ]
+    if chat_id and has_darkweb(chat_id):
+        keyboard.append([{"text": "🕸️ dark.web", "callback_data": "darkweb:open"}])
+    else:
+        keyboard.append([{"text": "🕸️ dark.web", "callback_data": "buy_darkweb"}])
+    keyboard.append([{"text": "💬 Администрация", "url": ADMIN_LINK}])
     if chat_id and is_admin(chat_id):
         keyboard.append([{"text": "👥 Все пользователи", "callback_data": "admin:users"}])
         keyboard.append([{"text": "🚫 Забаненные", "callback_data": "admin:banned_list"}])
     return {"inline_keyboard": keyboard}
 
 
-def stars_keyboard():
+def anonymous_emails_keyboard():
     keyboard = []
-    for stars_id, stars in STARS_PACKAGES.items():
-        count = stars['name'].split()[1]
-        keyboard.append([
-            {"text": f"⭐ {count} Stars — {stars['price']} ₽", "callback_data": f"buy_stars:{stars_id}"}
-        ])
+    for email_id, item in ANONYMOUS_EMAIL_PACKAGES.items():
+        btc = rub_to_btc(item["price"])
+        eth = rub_to_eth(item["price"])
+        stars = item.get("stars", rub_to_stars(item["price"]))
+        keyboard.append([{
+            "text": f"{item['name']} — {btc} BTC | {eth} ETH | {stars}⭐",
+            "callback_data": f"buy_email:{email_id}"
+        }])
     keyboard.append([{"text": "💬 Администрация", "url": ADMIN_LINK}])
     keyboard.append([{"text": "⬅️ В главное меню", "callback_data": "back:main"}])
     return {"inline_keyboard": keyboard}
@@ -821,14 +967,16 @@ def accounts_by_country_keyboard():
     keyboard = []
     for acc_id, item in ACCOUNTS_CATALOG.items():
         qty = ACCOUNTS_STOCK.get(acc_id, 0)
-        stars = item.get("stars", "?")
         price = item.get("price", "?")
+        btc = rub_to_btc(price)
+        eth = rub_to_eth(price)
+        stars = item.get("stars", rub_to_stars(price))
         discount = item.get("discount")
 
         if discount:
-            price_part = f"{price}₽ 🎁-{discount}% | {stars}⭐"
+            price_part = f"BTC | ETH | {stars}⭐ 🎁-{discount}%"
         else:
-            price_part = f"{price}₽ | {stars}⭐"
+            price_part = f"BTC | ETH | {stars}⭐"
 
         keyboard.append([{
             "text": f"{item['name']} {price_part} ({qty}шт)",
@@ -839,12 +987,13 @@ def accounts_by_country_keyboard():
     return {"inline_keyboard": keyboard}
 
 
-def payment_method_keyboard(order_id, item_name, price, stars):
+def payment_method_keyboard(order_id, btc, eth, stars, back_callback="back:main"):
     return {
         "inline_keyboard": [
-            [{"text": f"💳 Оплатить рублями — {price}₽", "callback_data": f"pay_rub:{order_id}"}],
+            [{"text": f"₿ Оплатить Bitcoin — {btc} BTC", "callback_data": f"pay_btc:{order_id}"}],
+            [{"text": f"Ξ Оплатить Ethereum — {eth} ETH", "callback_data": f"pay_eth:{order_id}"}],
             [{"text": f"⭐ Оплатить звёздами — {stars}⭐", "callback_data": f"pay_stars:{order_id}"}],
-            [{"text": "⬅️ Назад", "callback_data": "sub:accounts:by_country"}]
+            [{"text": "⬅️ Назад", "callback_data": back_callback}]
         ]
     }
 
@@ -934,6 +1083,103 @@ def admin_user_actions_keyboard(target_chat_id, is_banned):
 # ТЕКСТЫ
 # ==================================================
 
+def darkweb_payment_keyboard(order_id, btc, eth, stars=DARKWEB_PRICE_STARS):
+    return {
+        "inline_keyboard": [
+            [{"text": f"\u20bf \u041e\u043f\u043b\u0430\u0442\u0438\u0442\u044c Bitcoin \u2014 {btc} BTC", "callback_data": f"pay_btc:{order_id}"}],
+            [{"text": f"\u039e \u041e\u043f\u043b\u0430\u0442\u0438\u0442\u044c Ethereum \u2014 {eth} ETH", "callback_data": f"pay_eth:{order_id}"}],
+            [{"text": f"\u2b50 \u041e\u043f\u043b\u0430\u0442\u0438\u0442\u044c \u0437\u0432\u0451\u0437\u0434\u0430\u043c\u0438 \u2014 {stars}\u2b50", "callback_data": f"pay_stars:{order_id}"}],
+            [{"text": "\u2b05\ufe0f \u041d\u0430\u0437\u0430\u0434", "callback_data": "back:main"}]
+        ]
+    }
+
+
+def darkweb_access_keyboard(chat_id=None):
+    keyboard = []
+    keyboard.append([{"text": "\U0001f419 \u0412\u044b\u0445\u043e\u0434 \u0432 Kraken", "url": CONTACT_URL}])
+    keyboard.append([{"text": "\U0001f69a \u0410\u043d\u043e\u043d \u0430\u043a\u043a\u0430\u0443\u043d\u0442\u044b \u0434\u043b\u044f \u043a\u0443\u0440\u044c\u0435\u0440\u0430", "url": CONTACT_URL}])
+    keyboard.append([{"text": "\u2b05\ufe0f \u0412 \u0433\u043b\u0430\u0432\u043d\u043e\u0435 \u043c\u0435\u043d\u044e", "callback_data": "back:main"}])
+    return {"inline_keyboard": keyboard}
+
+
+def kraken_payment_keyboard(order_id, btc, eth, stars=KRAKEN_PRICE_STARS):
+    return {
+        "inline_keyboard": [
+            [{"text": f"\u20bf \u041e\u043f\u043b\u0430\u0442\u0438\u0442\u044c Bitcoin \u2014 {btc} BTC", "callback_data": f"pay_btc:{order_id}"}],
+            [{"text": f"\u039e \u041e\u043f\u043b\u0430\u0442\u0438\u0442\u044c Ethereum \u2014 {eth} ETH", "callback_data": f"pay_eth:{order_id}"}],
+            [{"text": f"\u2b50 \u041e\u043f\u043b\u0430\u0442\u0438\u0442\u044c \u0437\u0432\u0451\u0437\u0434\u0430\u043c\u0438 \u2014 {stars}\u2b50", "callback_data": f"pay_stars:{order_id}"}],
+            [{"text": "\u2b05\ufe0f \u041d\u0430\u0437\u0430\u0434", "callback_data": "darkweb:open"}]
+        ]
+    }
+
+
+def kraken_offer_text(btc, eth):
+    return (
+        "\U0001f419 <b>\u0412\u042b\u0425\u041e\u0414 \u0412 KRAKEN</b>\n\n"
+        f"\u20bf Bitcoin: <b>{btc} BTC</b>\n"
+        f"\u039e Ethereum: <b>{eth} ETH</b>\n"
+        f"\u2b50 \u0417\u0432\u0451\u0437\u0434\u044b: <b>{KRAKEN_PRICE_STARS}\u2b50</b>\n\n"
+        "\U0001f513 \u041f\u043e\u0441\u043b\u0435 \u043f\u043e\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043d\u0438\u044f \u043e\u043f\u043b\u0430\u0442\u044b \u0434\u043e\u0441\u0442\u0443\u043f \u043e\u0442\u043a\u0440\u043e\u0435\u0442\u0441\u044f \u043d\u0430\u0432\u0441\u0435\u0433\u0434\u0430.\n\n"
+        "\U0001f447 \u0412\u044b\u0431\u0435\u0440\u0438\u0442\u0435 \u0441\u043f\u043e\u0441\u043e\u0431 \u043e\u043f\u043b\u0430\u0442\u044b:"
+    )
+
+
+def kraken_access_text():
+    return (
+        "\U0001f419 <b>KRAKEN \u2014 \u0414\u041e\u0421\u0422\u0423\u041f \u0410\u041a\u0422\u0418\u0412\u0415\u041d</b>\n\n"
+        "\u2705 \u0412\u044b\u0445\u043e\u0434 \u0432 Kraken \u043a\u0443\u043f\u043b\u0435\u043d \u0438 \u0437\u0430\u043a\u0440\u0435\u043f\u043b\u0451\u043d \u0437\u0430 \u0432\u0430\u043c\u0438.\n"
+        "\U0001f6e1\ufe0f \u0421\u0441\u044b\u043b\u043a\u0438 \u0438 \u0438\u043d\u0441\u0442\u0440\u0443\u043a\u0446\u0438\u0438 \u0432\u044b\u0434\u0430\u0451\u0442 \u0430\u0434\u043c\u0438\u043d\u0438\u0441\u0442\u0440\u0430\u0446\u0438\u044f.\n\n"
+        "\U0001f464 <b>\u041c\u043e\u0439 \u0432\u0442\u043e\u0440\u043e\u0439 \u0430\u043a\u043a\u0430\u0443\u043d\u0442 (\u0434\u043b\u044f \u043a\u0443\u043f\u0438\u0432\u0448\u0438\u0445):</b> @dark_exec_me_shop"
+    )
+
+
+def kraken_access_keyboard():
+    return {
+        "inline_keyboard": [
+            [{"text": "\U0001f4ec \u041f\u043e\u043b\u0443\u0447\u0438\u0442\u044c \u0434\u043e\u0441\u0442\u0443\u043f \u0443 \u0430\u0434\u043c\u0438\u043d\u0430", "url": ADMIN_LINK}],
+            [{"text": "\u2b05\ufe0f \u041d\u0430\u0437\u0430\u0434", "callback_data": "darkweb:open"}]
+        ]
+    }
+
+
+def courier_accounts_text():
+    return (
+        "\U0001f6b6 <b>\u0410\u041d\u041e\u041d \u0410\u041a\u041a\u0410\u0423\u041d\u0422\u042b \u0414\u041b\u042f \u0420\u0410\u0411\u041e\u0422\u042b \u041a\u0423\u0420\u042c\u0415\u0420\u041e\u041c</b>\n\n"
+        "\u2705 \u0410\u043a\u043a\u0430\u0443\u043d\u0442\u044b \u0431\u0435\u0437 \u043f\u0440\u0438\u0432\u044f\u0437\u043a\u0438 \u043a \u0432\u0430\u0448\u0438\u043c \u0434\u0430\u043d\u043d\u044b\u043c\n"
+        "\U0001f512 \u0427\u0438\u0441\u0442\u044b\u0435, \u0433\u043e\u0442\u043e\u0432\u044b\u0435 \u043a \u0440\u0430\u0431\u043e\u0442\u0435\n"
+        "\u26a1 \u0412\u044b\u0434\u0430\u0447\u0430 \u0441\u0440\u0430\u0437\u0443 \u043f\u043e\u0441\u043b\u0435 \u043e\u043f\u043b\u0430\u0442\u044b\n\n"
+        "\U0001f4ec \u041f\u043e \u043d\u0430\u043b\u0438\u0447\u0438\u044e \u0438 \u043e\u0444\u043e\u0440\u043c\u043b\u0435\u043d\u0438\u044e \u2014 \u043f\u0438\u0448\u0438\u0442\u0435 \u0430\u0434\u043c\u0438\u043d\u0438\u0441\u0442\u0440\u0430\u0446\u0438\u0438."
+    )
+
+
+def courier_accounts_keyboard():
+    return {
+        "inline_keyboard": [
+            [{"text": "\U0001f4ac \u0410\u0434\u043c\u0438\u043d\u0438\u0441\u0442\u0440\u0430\u0446\u0438\u044f", "url": ADMIN_LINK}],
+            [{"text": "\u2b05\ufe0f \u0412 \u0433\u043b\u0430\u0432\u043d\u043e\u0435 \u043c\u0435\u043d\u044e", "callback_data": "back:main"}]
+        ]
+    }
+
+
+def darkweb_offer_text(btc, eth):
+    return (
+        "\U0001f578\ufe0f <b>DARK.WEB \u0414\u041e\u0421\u0422\u0423\u041f</b>\n\n"
+        f"\u20bf Bitcoin: <b>{btc} BTC</b>\n"
+        f"\u039e Ethereum: <b>{eth} ETH</b>\n"
+        f"\u2b50 \u0417\u0432\u0451\u0437\u0434\u044b: <b>{DARKWEB_PRICE_STARS}\u2b50</b>\n\n"
+        "\U0001f513 \u041f\u043e\u0441\u043b\u0435 \u043f\u043e\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043d\u0438\u044f \u043e\u043f\u043b\u0430\u0442\u044b \u043a\u043d\u043e\u043f\u043a\u0430 "
+        "<b>dark.web</b> \u043d\u0430\u0432\u0441\u0435\u0433\u0434\u0430 \u043f\u043e\u044f\u0432\u0438\u0442\u0441\u044f \u0432 \u0432\u0430\u0448\u0435\u043c \u043c\u0435\u043d\u044e.\n\n"
+        "\U0001f447 \u0412\u044b\u0431\u0435\u0440\u0438\u0442\u0435 \u0441\u043f\u043e\u0441\u043e\u0431 \u043e\u043f\u043b\u0430\u0442\u044b:"
+    )
+
+
+def darkweb_access_text():
+    return (
+        "\U0001f578\ufe0f <b>DARK.WEB \u2014 \u0414\u041e\u0421\u0422\u0423\u041f \u0410\u041a\u0422\u0418\u0412\u0415\u041d</b>\n\n"
+        "\u2800"
+    )
+
+
 def start_text():
     return (
         "╔══════════════════════════╗\n"
@@ -962,40 +1208,98 @@ def accounts_by_country_text():
     )
 
 
-def stars_text():
+def anonymous_emails_text():
     return (
-        "⭐ <b>Звёзды Telegram (Stars)</b>\n\n"
-        "🌟 Пополните свой баланс звёзд в Telegram!\n\n"
-        f"💎 <b>Курс: 1⭐ = {STAR_RATE}₽</b>\n\n"
-        "📦 <b>Доступные пакеты:</b>\n\n"
-        "👇 Выберите нужный пакет:"
+        "📧 <b>АНОНИМНЫЕ ПОЧТЫ</b>\n\n"
+        "🔒 Почтовые ящики созданы для приватной регистрации "
+        "на ресурсах и перехода по гиперссылкам, где важна конфиденциальность.\n\n"
+        "🛡️ Без публикации ваших личных данных\n"
+        "⚡ Быстрая выдача после подтверждения оплаты\n"
+        "🌐 Подходят для регистрации на приватных ресурсах, "
+        "включая ссылки в сети .onion\n\n"
+        "👇 Выберите нужный вариант:"
     )
 
 
-def payment_text(item_name, price, stars=None):
-    stars_line = f"⭐ Или звёздами: <b>{stars}⭐</b>\n" if stars else ""
+def anonymous_email_payment_text(item_name, price, nodes, stars=None):
+    btc = rub_to_btc(price)
+    eth = rub_to_eth(price)
+    stars = stars or rub_to_stars(price)
     return (
-        "💳 <b>ОФОРМЛЕНИЕ ЗАКАЗА</b>\n\n"
+        "📧 <b>ОФОРМЛЕНИЕ АНОНИМНОЙ ПОЧТЫ</b>\n\n"
         f"📦 Товар: <b>{item_name}</b>\n"
-        f"💰 Сумма: <b>{price} ₽</b>\n"
+        f"₿ Bitcoin: <b>{btc} BTC</b>\n"
+        f"Ξ Ethereum: <b>{eth} ETH</b>\n"
+        f"⭐ Telegram Stars: <b>{stars}⭐</b>\n"
+        f"🔗 Количество узлов: <b>{nodes}</b>\n\n"
+        "━━━━━━━━━━━━━━\n"
+        "🔒 <b>О КОНФИДЕНЦИАЛЬНОСТИ</b>\n\n"
+        "Почта предназначена для приватной регистрации и использования "
+        "гиперссылок без указания ваших основных личных данных.\n"
+        "Не используйте её для незаконных действий и не передавайте "
+        "доступ третьим лицам.\n\n"
+        "━━━━━━━━━━━━━━\n"
+        "👇 Выберите способ оплаты:"
+    )
+
+
+def payment_choice_text(item_name, price, stars=None):
+    btc = rub_to_btc(price)
+    eth = rub_to_eth(price)
+    calculated_stars = stars or rub_to_stars(price)
+    return (
+        "💳 <b>ВЫБОР СПОСОБА ОПЛАТЫ</b>\n\n"
+        f"📦 Товар: <b>{item_name}</b>\n"
+        f"₿ Bitcoin: <b>{btc} BTC</b>\n"
+        f"Ξ Ethereum: <b>{eth} ETH</b>\n"
+        f"⭐ Telegram Stars: <b>{calculated_stars}⭐</b>\n\n"
+        "🔒 Выберите удобный способ оплаты ниже:"
+    )
+
+
+def bitcoin_payment_text(item_name, btc, stars=None):
+    stars_line = f"⭐ Альтернатива: <b>{stars}⭐</b>\n" if stars else ""
+    return (
+        "₿ <b>ОПЛАТА BITCOIN</b>\n\n"
+        f"📦 Товар: <b>{item_name}</b>\n"
+        f"₿ Сумма: <b>{btc} BTC</b>\n"
         f"{stars_line}\n"
         "━━━━━━━━━━━━━━\n"
-        "💳 <b>РЕКВИЗИТЫ ДЛЯ ОПЛАТЫ</b>\n\n"
-        f"🏦 Банк: {BANK_NAME}\n"
-        f"💳 Карта: {CARD_NUMBER}\n"
-        f"👤 Получатель: {RECIPIENT}\n\n"
-        "━━━━━━━━━━━━━━\n"
-        "🔴 <b>ВАЖНОЕ ПРАВИЛО ОПЛАТЫ!</b> 🔴\n\n"
-        "⚠️ <b>Переводите ТОЧНУЮ сумму, указанную выше!</b>\n\n"
-        "❌ Если вы переведёте БОЛЬШЕ или МЕНЬШЕ —\n"
-        "администратор НЕ СМОЖЕТ определить, какой аккаунт вы выбрали!\n\n"
-        "✅ Переведите РОВНО столько, сколько указано в чеке.\n\n"
+        "📍 <b>Bitcoin-кошелёк для оплаты:</b>\n"
+        f"<code>{BTC_WALLET}</code>\n\n"
         "━━━━━━━━━━━━━━\n"
         "📌 <b>ИНСТРУКЦИЯ:</b>\n"
-        "1️⃣ Переведите ТОЧНУЮ сумму на карту\n"
+        "1️⃣ Отправьте точную сумму BTC на указанный кошелёк\n"
         "2️⃣ Нажмите «✅ Я оплатил» ниже\n"
         "3️⃣ Дождитесь подтверждения — откроется чат с админом\n"
         "4️⃣ Получите <b>товар</b> в течение 5-15 минут\n\n"
+        "💬 По всем вопросам — к администрации!"
+    )
+
+
+def ethereum_payment_text(item_name, eth, stars=None, btc=None):
+    alternatives = []
+    if btc:
+        alternatives.append(f"₿ Bitcoin: <b>{btc} BTC</b>")
+    if stars:
+        alternatives.append(f"⭐ Telegram Stars: <b>{stars}⭐</b>")
+    alternatives_text = "\n".join(alternatives)
+    return (
+        "Ξ <b>ОПЛАТА ETHEREUM</b>\n\n"
+        f"📦 Товар: <b>{item_name}</b>\n"
+        f"Ξ Сумма: <b>{eth} ETH</b>\n"
+        f"{alternatives_text}\n\n"
+        "━━━━━━━━━━━━━━\n"
+        f"🌐 <b>Сеть:</b> {ETH_NETWORK}\n"
+        "📍 <b>Ethereum-кошелёк для оплаты:</b>\n"
+        f"<code>{ETH_WALLET}</code>\n\n"
+        "━━━━━━━━━━━━━━\n"
+        "📌 <b>ИНСТРУКЦИЯ:</b>\n"
+        f"1️⃣ Отправьте точную сумму ETH в сети {ETH_NETWORK}\n"
+        "2️⃣ Нажмите «✅ Я оплатил» ниже\n"
+        "3️⃣ Дождитесь подтверждения администратора\n"
+        "4️⃣ Получите <b>товар</b> в течение 5-15 минут\n\n"
+        "⚠️ Не отправляйте ETH через другую сеть.\n\n"
         "💬 По всем вопросам — к администрации!"
     )
 
@@ -1054,25 +1358,6 @@ def payment_stars_only_text(item_name, stars):
         "💬 По всем вопросам — к администрации!"
     )
 
-
-def payment_stars_text(item_name, price):
-    return (
-        "💳 <b>ОФОРМЛЕНИЕ ЗАКАЗА</b>\n\n"
-        f"📦 Товар: <b>{item_name}</b>\n"
-        f"💰 Сумма: <b>{price} ₽</b>\n\n"
-        "━━━━━━━━━━━━━━\n"
-        "💳 <b>РЕКВИЗИТЫ ДЛЯ ОПЛАТЫ</b>\n\n"
-        f"🏦 Банк: {BANK_NAME}\n"
-        f"💳 Карта: {CARD_NUMBER}\n"
-        f"👤 Получатель: {RECIPIENT}\n\n"
-        "━━━━━━━━━━━━━━\n"
-        "📌 <b>ИНСТРУКЦИЯ:</b>\n"
-        "1️⃣ Переведите ТОЧНУЮ сумму на карту\n"
-        "2️⃣ Нажмите «✅ Я оплатил» ниже\n"
-        "3️⃣ Дождитесь подтверждения — откроется чат с админом\n"
-        "4️⃣ Получите <b>товар</b> в течение 5-15 минут\n\n"
-        "💬 По всем вопросам — к администрации!"
-    )
 
 # ==================================================
 # ОБРАБОТЧИК СООБЩЕНИЙ ОТ АДМИНА
@@ -1256,6 +1541,18 @@ def handle_update(update):
         answer_callback_text(callback_id, "🚫 Вы забанены.", show_alert=True)
         return
 
+    if data == "temp_robots":
+        answer_callback(callback_id)
+        edit_message(
+            chat_id,
+            message_id,
+            "🤖 <b>Временные роботы</b>",
+            {"inline_keyboard": [
+                [{"text": "⬅️ В главное меню", "callback_data": "back:main"}]
+            ]}
+        )
+        return
+
     if data == "back:main":
         answer_callback(callback_id)
         edit_message(chat_id, message_id, start_text(), main_keyboard(chat_id))
@@ -1263,9 +1560,14 @@ def handle_update(update):
 
     if data.startswith("cat:"):
         cat_id = data.split(":", 1)[1]
-        if cat_id == "stars":
+        if cat_id == "anonymous_emails":
             answer_callback(callback_id)
-            edit_message(chat_id, message_id, stars_text(), stars_keyboard())
+            edit_message(
+                chat_id,
+                message_id,
+                anonymous_emails_text(),
+                anonymous_emails_keyboard()
+            )
         return
 
     if data.startswith("sub:"):
@@ -1275,17 +1577,114 @@ def handle_update(update):
             edit_message(chat_id, message_id, accounts_by_country_text(), accounts_by_country_keyboard())
         return
 
-    if data.startswith("buy_stars:"):
-        stars_id = data.split(":", 1)[1]
-        stars = STARS_PACKAGES.get(stars_id)
-        if stars:
+    if data == "darkweb:open":
+        if not has_darkweb(chat_id):
+            answer_callback_text(callback_id, "\U0001f512 \u0414\u043e\u0441\u0442\u0443\u043f \u043d\u0435 \u043a\u0443\u043f\u043b\u0435\u043d", show_alert=True)
+            return
+        answer_callback(callback_id)
+        edit_message(chat_id, message_id, darkweb_access_text(), darkweb_access_keyboard(chat_id))
+        return
+
+    if data == "cat:courier":
+        answer_callback(callback_id)
+        edit_message(chat_id, message_id, courier_accounts_text(), courier_accounts_keyboard())
+        return
+
+    if data == "kraken:open":
+        if not has_kraken(chat_id):
+            answer_callback_text(callback_id, "\U0001f512 \u0414\u043e\u0441\u0442\u0443\u043f \u043d\u0435 \u043a\u0443\u043f\u043b\u0435\u043d", show_alert=True)
+            return
+        answer_callback(callback_id)
+        edit_message(chat_id, message_id, kraken_access_text(), kraken_access_keyboard())
+        return
+
+    if data == "buy_kraken":
+        if not has_darkweb(chat_id):
+            answer_callback_text(callback_id, "\U0001f512 \u0421\u043d\u0430\u0447\u0430\u043b\u0430 dark.web", show_alert=True)
+            return
+        if has_kraken(chat_id):
             answer_callback(callback_id)
-            order_counter += 1
-            orders[chat_id] = {
-                "order_id": order_counter, "item_id": stars_id, "item": stars["name"],
-                "price": stars["price"], "status": "waiting_payment"
-            }
-            edit_message(chat_id, message_id, payment_stars_text(stars["name"], stars["price"]), payment_keyboard())
+            edit_message(chat_id, message_id, kraken_access_text(), kraken_access_keyboard())
+            return
+        answer_callback(callback_id)
+        order_counter += 1
+        btc = rub_to_btc(KRAKEN_PRICE_RUB)
+        eth = rub_to_eth(KRAKEN_PRICE_RUB)
+        orders[chat_id] = {
+            "order_id": order_counter,
+            "item_id": "kraken",
+            "item": "\U0001f419 \u0412\u044b\u0445\u043e\u0434 \u0432 Kraken",
+            "price": str(KRAKEN_PRICE_RUB),
+            "btc": btc,
+            "eth": eth,
+            "stars": str(KRAKEN_PRICE_STARS),
+            "status": "waiting_payment",
+        }
+        edit_message(
+            chat_id, message_id,
+            kraken_offer_text(btc, eth),
+            kraken_payment_keyboard(order_counter, btc, eth)
+        )
+        return
+
+    if data == "buy_darkweb":
+        if has_darkweb(chat_id):
+            answer_callback(callback_id)
+            edit_message(chat_id, message_id, darkweb_access_text(), darkweb_access_keyboard(chat_id))
+            return
+        answer_callback(callback_id)
+        order_counter += 1
+        btc = usd_to_btc(DARKWEB_PRICE_USD)
+        eth = usd_to_eth(DARKWEB_PRICE_USD)
+        orders[chat_id] = {
+            "order_id": order_counter,
+            "item_id": "darkweb",
+            "item": "\U0001f578\ufe0f dark.web \u0434\u043e\u0441\u0442\u0443\u043f",
+            "price": str(DARKWEB_PRICE_USD),
+            "btc": btc,
+            "eth": eth,
+            "stars": str(DARKWEB_PRICE_STARS),
+            "status": "waiting_payment",
+        }
+        edit_message(
+            chat_id, message_id,
+            darkweb_offer_text(btc, eth),
+            darkweb_payment_keyboard(order_counter, btc, eth)
+        )
+        return
+
+    if data.startswith("buy_email:"):
+        email_id = data.split(":", 1)[1]
+        item = ANONYMOUS_EMAIL_PACKAGES.get(email_id)
+        if not item:
+            answer_callback_text(callback_id, "❌ Товар не найден", show_alert=True)
+            return
+
+        answer_callback(callback_id)
+        order_counter += 1
+        orders[chat_id] = {
+            "order_id": order_counter,
+            "item_id": email_id,
+            "item": item["name"],
+            "price": item["price"],
+            "nodes": item["nodes"],
+            "stars": item.get("stars", rub_to_stars(item["price"])),
+            "status": "waiting_payment",
+        }
+        edit_message(
+            chat_id,
+            message_id,
+            anonymous_email_payment_text(
+                item["name"], item["price"], item["nodes"], item.get("stars")
+            ),
+            payment_method_keyboard(
+                order_counter,
+                rub_to_btc(item["price"]),
+                rub_to_eth(item["price"]),
+                item.get("stars", rub_to_stars(item["price"])),
+                "cat:anonymous_emails"
+            )
+        )
         return
 
     if data.startswith("buy_acc:"):
@@ -1300,42 +1699,62 @@ def handle_update(update):
             return
         answer_callback(callback_id)
         order_counter += 1
+        calculated_stars = item.get("stars", rub_to_stars(item["price"]))
         orders[chat_id] = {
             "order_id": order_counter, "item_id": acc_id, "item": item["name"],
-            "price": item["price"], "stars": item.get("stars", "?"), "status": "waiting_payment"
+            "price": item["price"], "stars": calculated_stars, "status": "waiting_payment"
         }
-
-        if item.get("discount"):
-            price_line = (
-                f"💰 Цена: <b>{item['price']} ₽</b>  🎁 -{item['discount']}%  "
-                f"<s>{item.get('old_price', '')} ₽</s>\n"
-                f"⭐ Звёзды: <b>{item.get('stars', '?')}⭐</b> (без скидки)\n\n"
-            )
-        else:
-            price_line = (
-                f"💰 Цена: <b>{item['price']} ₽</b>\n"
-                f"⭐ Звёзды: <b>{item.get('stars', '?')}⭐</b>\n\n"
-            )
 
         edit_message(
             chat_id, message_id,
-            f"💳 <b>ВЫБЕРИТЕ СПОСОБ ОПЛАТЫ</b>\n\n"
-            f"📦 Товар: <b>{item['name']}</b>\n"
-            f"{price_line}"
-            f"👇 Как хотите оплатить?",
-            payment_method_keyboard(order_counter, item["name"], item["price"], item.get("stars", "?"))
+            payment_choice_text(item["name"], item["price"], calculated_stars),
+            payment_method_keyboard(
+                order_counter,
+                rub_to_btc(item["price"]),
+                rub_to_eth(item["price"]),
+                calculated_stars,
+                "sub:accounts:by_country"
+            )
         )
         return
 
-    if data.startswith("pay_rub:"):
+    if data.startswith("pay_btc:"):
         order_id = int(data.split(":")[1])
         answer_callback(callback_id)
         if chat_id not in orders or orders[chat_id].get("order_id") != order_id:
             edit_message(chat_id, message_id, "❌ <b>Заказ не найден.</b>", main_keyboard(chat_id))
             return
         order = orders[chat_id]
-        order["payment_method"] = "rub"
-        edit_message(chat_id, message_id, payment_text(order["item"], order["price"], order.get("stars")), payment_keyboard())
+        order["payment_method"] = "btc"
+        order["btc"] = order.get("btc") or rub_to_btc(order["price"])
+        edit_message(
+            chat_id,
+            message_id,
+            bitcoin_payment_text(order["item"], order["btc"], order.get("stars")),
+            payment_keyboard()
+        )
+        return
+
+    if data.startswith("pay_eth:"):
+        order_id = int(data.split(":")[1])
+        answer_callback(callback_id)
+        if chat_id not in orders or orders[chat_id].get("order_id") != order_id:
+            edit_message(chat_id, message_id, "❌ <b>Заказ не найден.</b>", main_keyboard(chat_id))
+            return
+        order = orders[chat_id]
+        order["payment_method"] = "eth"
+        order["eth"] = order.get("eth") or rub_to_eth(order["price"])
+        edit_message(
+            chat_id,
+            message_id,
+            ethereum_payment_text(
+                order["item"],
+                order["eth"],
+                order.get("stars"),
+                order.get("btc", rub_to_btc(order["price"]))
+            ),
+            payment_keyboard()
+        )
         return
 
     if data.startswith("pay_stars:"):
@@ -1346,7 +1765,12 @@ def handle_update(update):
             return
         order = orders[chat_id]
         order["payment_method"] = "stars"
-        edit_message(chat_id, message_id, payment_stars_only_text(order["item"], order.get("stars", "?")), payment_keyboard())
+        edit_message(
+            chat_id,
+            message_id,
+            payment_stars_only_text(order["item"], order.get("stars", "?")),
+            payment_keyboard()
+        )
         return
 
     if data == "payment_done":
@@ -1363,15 +1787,15 @@ def handle_update(update):
 
         pending_orders[order_id] = {
             "chat_id": chat_id, "item_id": order.get("item_id"), "item": order["item"],
-            "price": order["price"], "stars": order.get("stars", "?"), "username": user_info,
+            "price": order["price"], "btc": order.get("btc", rub_to_btc(order["price"])),
+            "eth": order.get("eth", rub_to_eth(order["price"])),
+            "stars": order.get("stars", rub_to_stars(order["price"])), "username": user_info,
             "phone": user_phones.get(chat_id, "Не указан"),
-            "payment_method": order.get("payment_method", "rub")
+            "payment_method": order.get("payment_method", "btc")
         }
         save_order_log(order_id, chat_id, user_info, order["item"], order["price"], "waiting_admin")
 
-        method = order.get("payment_method", "rub")
-        method_block = (f"⭐ <b>Оплата:</b> {order.get('stars', '?')}⭐" if method == "stars"
-                        else f"💳 <b>Оплата:</b> {order['price']} ₽")
+        method_block = f"💳 <b>Оплата:</b> {order_amount_text(order)}"
 
         send_message(
             ADMIN_ID,
@@ -1390,7 +1814,7 @@ def handle_update(update):
             f"📩 <b>ЗАЯВКА ОТПРАВЛЕНА</b>\n\n"
             f"🆔 <b>Заказ:</b> #{order_id}\n"
             f"📦 <b>Товар:</b> {order['item']}\n"
-            f"💰 <b>Сумма:</b> {order['price']} ₽\n\n"
+            f"💰 <b>Сумма:</b> {order_amount_text(order)}\n\n"
             f"⏳ Ожидайте подтверждения администратора (5-15 минут).",
             None
         )
@@ -1410,7 +1834,8 @@ def handle_update(update):
         save_order_log(order_id, user_chat_id, order.get("username", "-"), order["item"], order["price"], "confirmed")
         answer_callback(callback_id)
         send_message(user_chat_id,
-                     f"✅ <b>ЗАКАЗ #{order_id} ПОДТВЕРЖДЁН!</b>\n\n📦 {order['item']}\n💰 {order['price']} ₽", None)
+                     f"✅ <b>ЗАКАЗ #{order_id} ПОДТВЕРЖДЁН!</b>\n\n"
+                     f"📦 {order['item']}\n💰 {order_amount_text(order)}", None)
         edit_message(
             chat_id, message_id,
             f"✅ <b>ЗАКАЗ #{order_id} ПОДТВЕРЖДЁН</b>\n\n"
@@ -1483,7 +1908,13 @@ def handle_update(update):
         if item_id.startswith("acc_"):
             real_item = ACCOUNTS_CATALOG.get(item_id, {}).get("name", order.get("item", "—"))
         elif item_id.startswith("stars_"):
-            real_item = STARS_PACKAGES.get(item_id, {}).get("name", order.get("item", "—"))
+            real_item = order.get("item", "—")
+        elif item_id.startswith("email_"):
+            real_item = ANONYMOUS_EMAIL_PACKAGES.get(item_id, {}).get("name", order.get("item", "—"))
+        elif item_id == "darkweb":
+            real_item = "🕸️ dark.web доступ"
+        elif item_id == "kraken":
+            real_item = "🐙 Выход в Kraken"
         else:
             real_item = order.get("item", "—")
         order["item"] = real_item
@@ -1499,12 +1930,37 @@ def handle_update(update):
         is_stars = item_id.startswith("stars_")
 
         save_sold_log(
-            category=("Аккаунт" if item_id.startswith("acc_") else ("Звёзды" if is_stars else "Другое")),
+            category=(
+                "Аккаунт" if item_id.startswith("acc_")
+                else ("Звёзды" if is_stars
+                      else ("Анонимная почта" if item_id.startswith("email_")
+                            else ("dark.web" if item_id == "darkweb" else ("Kraken" if item_id == "kraken" else "Другое"))))
+            ),
             item=real_item, price=order["price"], username=buyer_username,
             phone=buyer_phone, chat_id=user_chat_id, name=buyer_name,
-            is_stars=is_stars, payment_method=order.get("payment_method", "rub"),
-            stars=order.get("stars", "?")
+            is_stars=is_stars, payment_method=order.get("payment_method", "btc"),
+            stars=order.get("stars", "?"),
+            btc=order.get("btc", rub_to_btc(order["price"])),
+            eth=order.get("eth", rub_to_eth(order["price"]))
         )
+
+        if item_id == "kraken":
+            grant_kraken(user_chat_id)
+            send_message(
+                user_chat_id,
+                "🐙 <b>Выход в Kraken открыт!</b>\n\n"
+                "Кнопка <b>Выход в Kraken</b> теперь доступна в разделе dark.web.",
+                darkweb_access_keyboard(user_chat_id)
+            )
+
+        if item_id == "darkweb":
+            grant_darkweb(user_chat_id)
+            send_message(
+                user_chat_id,
+                "🕸️ <b>Доступ dark.web открыт!</b>\n\n"
+                "Кнопка <b>dark.web</b> теперь в вашем меню.",
+                main_keyboard(user_chat_id)
+            )
 
         temp_data[order_id]["finished"] = True
 
@@ -1517,7 +1973,8 @@ def handle_update(update):
                      f"🎉 <b>ЗАКАЗ #{order_id} ЗАВЕРШЁН</b>\n\n📦 {real_item}\n\n✅ Подтвердите получение:",
                      user_confirm_keyboard(order_id))
         edit_message(chat_id, message_id,
-                     f"✅ <b>ЗАКАЗ #{order_id} ЗАВЕРШЁН</b>\n\n📦 {real_item}\n💰 {order['price']} ₽", None)
+                     f"✅ <b>ЗАКАЗ #{order_id} ЗАВЕРШЁН</b>\n\n"
+                     f"📦 {real_item}\n💰 {order_amount_text(order)}", None)
         return
 
     if data.startswith("ban_ask:"):
@@ -1778,6 +2235,8 @@ def main():
 
     load_admins()
     load_verified_users()
+    load_darkweb_users()
+    load_kraken_users()
     load_stock()
     load_banned_users()
 
@@ -1844,4 +2303,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+   main()
