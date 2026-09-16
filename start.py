@@ -933,19 +933,27 @@ def remove_reply_keyboard(chat_id, text="⬇️ Клавиатура обнов�
 
 def main_keyboard(chat_id=None):
     keyboard = [
-        [{"text": "🎯 АККАУНТЫ TELEGRAM 🌍", "callback_data": "sub:accounts:by_country"}],
-        [{"text": "⭐ Звёзды Telegram", "callback_data": "temp_robots"}],
-        [{"text": "📧 Анонимные почты", "callback_data": "cat:anonymous_emails"}],
+        [{"text": "🕶️ Anon Socials 🕶️", "callback_data": "cat:anon_socials"}],
     ]
     if chat_id and has_darkweb(chat_id):
-        keyboard.append([{"text": "🕸️ dark.web", "callback_data": "darkweb:open"}])
+        keyboard.append([{"text": "⚠️ dark.web ⚠️", "callback_data": "darkweb:open"}])
     else:
-        keyboard.append([{"text": "🕸️ dark.web", "callback_data": "buy_darkweb"}])
+        keyboard.append([{"text": "⚠️ dark.web ⚠️", "callback_data": "buy_darkweb"}])
     keyboard.append([{"text": "💬 Администрация", "url": ADMIN_LINK}])
     if chat_id and is_admin(chat_id):
         keyboard.append([{"text": "👥 Все пользователи", "callback_data": "admin:users"}])
         keyboard.append([{"text": "🚫 Забаненные", "callback_data": "admin:banned_list"}])
     return {"inline_keyboard": keyboard}
+
+
+def anon_socials_keyboard():
+    return {
+        "inline_keyboard": [
+            [{"text": "⛓️‍💥 АККАУНТЫ TELEGRAM ⛓️‍💥", "callback_data": "sub:accounts:by_country"}],
+            [{"text": "📧 Анонимные почты", "callback_data": "cat:anonymous_emails"}],
+            [{"text": "⬅️ В главное меню", "callback_data": "back:main"}]
+        ]
+    }
 
 
 def anonymous_emails_keyboard():
@@ -959,7 +967,7 @@ def anonymous_emails_keyboard():
             "callback_data": f"buy_email:{email_id}"
         }])
     keyboard.append([{"text": "💬 Администрация", "url": ADMIN_LINK}])
-    keyboard.append([{"text": "⬅️ В главное меню", "callback_data": "back:main"}])
+    keyboard.append([{"text": "⬅️ Назад", "callback_data": "cat:anon_socials"}])
     return {"inline_keyboard": keyboard}
 
 
@@ -983,7 +991,7 @@ def accounts_by_country_keyboard():
             "callback_data": f"buy_acc:{acc_id}"
         }])
     keyboard.append([{"text": "💬 Администрация", "url": ADMIN_LINK}])
-    keyboard.append([{"text": "⬅️ Назад", "callback_data": "back:main"}])
+    keyboard.append([{"text": "⬅️ Назад", "callback_data": "cat:anon_socials"}])
     return {"inline_keyboard": keyboard}
 
 
@@ -1188,6 +1196,14 @@ def start_text():
         "🛒 <b>Добро пожаловать в магазин!</b>\n\n"
         "🔒 Анонимно · ⚡ Быстро · 💎 Надёжно\n\n"
         "👇 <b>Выберите категорию:</b>"
+    )
+
+
+def anon_socials_text():
+    return (
+        "🕶️ <b>ANON SOCIALS</b>\n\n"
+        "🔒 Анонимные аккаунты и почты для приватного присутствия в сети.\n\n"
+        "👇 Выберите категорию:"
     )
 
 
@@ -1541,18 +1557,6 @@ def handle_update(update):
         answer_callback_text(callback_id, "🚫 Вы забанены.", show_alert=True)
         return
 
-    if data == "temp_robots":
-        answer_callback(callback_id)
-        edit_message(
-            chat_id,
-            message_id,
-            "🤖 <b>Временные роботы</b>",
-            {"inline_keyboard": [
-                [{"text": "⬅️ В главное меню", "callback_data": "back:main"}]
-            ]}
-        )
-        return
-
     if data == "back:main":
         answer_callback(callback_id)
         edit_message(chat_id, message_id, start_text(), main_keyboard(chat_id))
@@ -1560,7 +1564,15 @@ def handle_update(update):
 
     if data.startswith("cat:"):
         cat_id = data.split(":", 1)[1]
-        if cat_id == "anonymous_emails":
+        if cat_id == "anon_socials":
+            answer_callback(callback_id)
+            edit_message(
+                chat_id,
+                message_id,
+                anon_socials_text(),
+                anon_socials_keyboard()
+            )
+        elif cat_id == "anonymous_emails":
             answer_callback(callback_id)
             edit_message(
                 chat_id,
